@@ -257,6 +257,17 @@ function clearAll(){
   state = {players:[], history:[]};
   renderPlayers();
   renderHistory();
+// Desliga edição ao abrir
+const toggleBtn = document.getElementById("toggleEditBtn");
+toggleBtn.textContent = "Modo Edição: OFF";
+toggleBtn.classList.add("off");
+toggleBtn.disabled = true; // bloqueia click
+
+// Desabilita todos os inputs de edição
+document.querySelectorAll("#playersTable input").forEach(i => i.disabled = true);
+document.getElementById("playerAddPanel").style.display = "none";
+document.getElementById("matchRegisterCard").style.display = "none";
+  
 }
 
 function recalcPlayer(p){
@@ -586,4 +597,5 @@ renderHistory();
 </script>
 </body>
 </html>
+
 
