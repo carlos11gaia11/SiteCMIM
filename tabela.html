@@ -118,7 +118,7 @@
 
       <div id="playerAddPanel" style="display:flex;gap:8px;margin-top:10px;align-items:center">
         <input id="newPlayerName" placeholder="Nome do jogador">
-        <button onclick="uiAddPlayer()">Adicionar Jogador</button>
+        <button id="adicionar-jogador" onclick="uiAddPlayer()">Adicionar Jogador</button>
         <button class="btn-ghost" onclick="clearAll()">Resetar</button>
       </div>
     </div>
@@ -583,6 +583,45 @@ function escapeJs(s){
 renderPlayers();
 renderHistory();
 
+</script>
+<script type="module">
+  // 🔥 Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 🔧 Config Firebase (MESMA do login)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+    authDomain: "login-cmim.firebaseapp.com",
+    projectId: "login-cmim",
+    storageBucket: "login-cmim.firebasestorage.app",
+    messagingSenderId: "1003784143194",
+    appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
+  };
+
+  // 🚀 Init
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 📥 REFERÊNCIA DO DOCUMENTO
+  const tabelaRef = doc(db, "tabela-insalubrinho", "pontos-insalubrinho");
+
+  // 📡 BUSCAR DADOS
+  async function carregarTabela() {
+    const snap = await getDoc(tabelaRef);
+
+    if (snap.exists()) {
+      console.log("🔥 Dados da tabela:", snap.data());
+    } else {
+      console.log("❌ Documento não encontrado");
+    }
+  }
+
+  carregarTabela();
 </script>
 </body>
 </html>
