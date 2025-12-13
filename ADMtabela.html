@@ -223,7 +223,53 @@ const RULES = {
   bagrePenalty: -3
 };
 
+  // 1️⃣ Inicializar Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim",
+  storageBucket: "login-cmim.firebasestorage.app",
+  messagingSenderId: "1003784143194",
+  appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363",
+  measurementId: "G-F32670E0H4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+
+// 3️⃣ Funções Firebase
+async function saveState() {
+  try {
+    await db.collection('cmim').doc('state').set(state);
+    console.log("Dados salvos no Firebase!");
+  } catch(err) {
+    console.error("Erro ao salvar no Firebase:", err);
+  }
+}
+
+async function loadState() {
+  try {
+    const doc = await db.collection('cmim').doc('state').get();
+    if(doc.exists){
+      state = doc.data();
+      console.log("Dados carregados do Firebase!");
+    } else {
+      console.log("Nenhum dado no Firebase, usando localStorage...");
+      const raw = localStorage.getItem('cmim_state_v1');
+      if(raw) state = JSON.parse(raw);
+    }
+  } catch(err) {
+    console.error("Erro ao carregar do Firebase:", err);
+  }
+}
 let state = { players: [], history: [] };
+// 4️⃣ Carregar dados antes de renderizar
+(async ()=>{
+  await loadState();
+  renderPlayers();
+  renderHistory();
+})();
+
 
 function saveState(){ localStorage.setItem('cmim_state_v1', JSON.stringify(state)); }
 function loadState(){ const raw = localStorage.getItem('cmim_state_v1'); if(raw) state = JSON.parse(raw); }
