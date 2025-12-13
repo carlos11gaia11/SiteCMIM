@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CMIM - Login</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('cmim.png') no-repeat center center / cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      backdrop-filter: brightness(0.3);
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 40px;
+      border-radius: 12px;
+      width: 350px;
+      color: yellow;
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #FFD700;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: yellow;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #e6d400;
+    }
+
+    .switch {
+      margin-top: 15px;
+      text-align: center;
+      cursor: pointer;
+      color: #FFD700;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2 id="formTitle">Login CMIM</h2>
+
+   <input type="email" id="email" placeholder="Seu Email" />
+
+<!-- 🔥 NOVOS CAMPOS (SÓ NO CADASTRO) -->
+<input
+  type="text"
+  id="lolNick"
+  placeholder="Nick do LoL (ex: 11gaia11#000)"
+  style="display: none;"
+/>
+
+<select id="mainLane" style="display: none;">
+  <option value="">Main Lane</option>
+  <option value="TOP">Top</option>
+  <option value="JUNGLE">Jungle</option>
+  <option value="MID">Mid</option>
+  <option value="ADC">ADC</option>
+  <option value="SUPPORT">Support</option>
+</select>
+
+<select id="secondaryLane" style="display: none;">
+  <option value="">Lane Secundária</option>
+  <option value="TOP">Top</option>
+  <option value="JUNGLE">Jungle</option>
+  <option value="MID">Mid</option>
+  <option value="ADC">ADC</option>
+  <option value="SUPPORT">Support</option>
+</select>
+
+<!-- 🔥 CONTINUA NORMAL -->
+<input type="password" id="senha" placeholder="Senha" />
+
+    <input
+      type="password"
+      id="confirmarSenha"
+      placeholder="Confirmar Senha"
+      style="display: none;"
+    />
+
+    <button id="actionBtn" onclick="handleAuth()">Entrar</button>
+
+    <div class="switch" onclick="toggleForm()" id="switchText">
+      Não tem conta? Cadastre-se.
+    </div>
+  </div>
+
+  <script type="module">
+  // 🔥 Firebase (imports corretos para HTML puro)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 🔧 Configuração do Firebase (a sua)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+    authDomain: "login-cmim.firebaseapp.com",
+    projectId: "login-cmim",
+    storageBucket: "login-cmim.firebasestorage.app",
+    messagingSenderId: "1003784143194",
+    appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
+  };
+
+  // 🚀 Inicializa Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  console.log("🔥 Firebase conectado com sucesso");
+
+  // ===============================
+  // 🧠 LÓGICA DO FORM (sem login ainda)
+  // ===============================
+
+  let isRegister = false;
+
+  window.toggleForm = function () {
+  isRegister = !isRegister;
+
+  document.getElementById("formTitle").textContent =
+    isRegister ? "Cadastrar Conta" : "Login CMIM";
+
+  document.getElementById("actionBtn").textContent =
+    isRegister ? "Cadastrar" : "Entrar";
+
+  document.getElementById("switchText").textContent =
+    isRegister
+      ? "Já tem conta? Faça login."
+      : "Não tem conta? Cadastre-se.";
+
+  document.getElementById("confirmarSenha").style.display =
+    isRegister ? "block" : "none";
+
+  document.getElementById("lolNick").style.display =
+    isRegister ? "block" : "none";
+
+  document.getElementById("mainLane").style.display =
+    isRegister ? "block" : "none";
+
+  document.getElementById("secondaryLane").style.display =
+    isRegister ? "block" : "none";
+};
+
+  window.handleAuth = async function () {
+  const email = document.getElementById("email").value.trim();
+  const senha = document.getElementById("senha").value;
+  const confirmarSenha = document.getElementById("confirmarSenha").value;
+
+  const lolNick = document.getElementById("lolNick").value.trim();
+  const mainLane = document.getElementById("mainLane").value;
+  const secondaryLane = document.getElementById("secondaryLane").value;
+
+  if (!email || !senha || (isRegister && !confirmarSenha)) {
+    alert("Preencha todos os campos!");
+    return;
+  }
+
+  if (isRegister && senha !== confirmarSenha) {
+    alert("As senhas não coincidem!");
+    return;
+  }
+
+  try {
+    if (isRegister) {
+      // 🔐 CADASTRO
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+
+      const uid = cred.user.uid;
+
+      // 💾 SALVAR DADOS DO USUÁRIO
+      await setDoc(doc(db, "users", uid), {
+        email: email,
+        role: "user",
+        criadoEm: new Date()
+      });
+
+      alert("Conta criada com sucesso! Agora faça login.");
+      toggleForm();
+    } else {
+      // 🔑 LOGIN
+      await signInWithEmailAndPassword(auth, email, senha);
+      alert("Login realizado!");
+      window.location.href = "tabela.html";
+    }
+  } catch (error) {
+    alert("Erro: " + error.message);
+  }
+};
+</script>
+
+</body>
+</html>
