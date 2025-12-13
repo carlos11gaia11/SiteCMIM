@@ -1,18 +1,7 @@
-async function testeFirebase() {
-  try {
-    const snapshot = await getDocs(collection(db, "jogadores")); // pega a coleção jogadores
-    console.log("Conexão OK! Jogadores encontrados:", snapshot.size);
-  } catch (error) {
-    console.error("Erro ao conectar ao Firebase:", error);
-  }
-}
-
-testeFirebase();
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 1. Configuração do seu Firebase
+// Config do Firebase
 const firebaseConfig = {
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_DOMINIO.firebaseapp.com",
@@ -22,8 +11,20 @@ const firebaseConfig = {
   appId: "SEU_APP_ID"
 };
 
-// 2. Inicializar o Firebase
+// Inicializar Firebase primeiro
 const app = initializeApp(firebaseConfig);
 
-// 3. Criar a referência pro Firestore
+// Só depois inicializa o Firestore
 const db = getFirestore(app);
+
+// Agora você pode chamar a função de teste
+async function testeFirebase() {
+  try {
+    const snapshot = await getDocs(collection(db, "jogadores"));
+    console.log("Conexão OK! Jogadores encontrados:", snapshot.size);
+  } catch (error) {
+    console.error("Erro ao conectar ao Firebase:", error);
+  }
+}
+
+testeFirebase();
