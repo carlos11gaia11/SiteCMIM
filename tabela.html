@@ -76,6 +76,18 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  function loadDataFromFirestore(){
+  db.collection('cmim').doc('data')
+    .onSnapshot(doc => { // escuta alterações em tempo real
+      if(!doc.exists) return console.error('Documento cmim/data não encontrado.');
+      const data = doc.data();
+      renderPlayers(data.players || []);
+      renderHistory(data.history || []);
+    }, err => {
+      console.error('Erro ao carregar dados:', err);
+    });
+}
+
   function renderPlayers(players){
     const tbody = document.querySelector('#playersTable tbody');
     tbody.innerHTML = '';
@@ -141,3 +153,4 @@
 
 </body>
 </html>
+
