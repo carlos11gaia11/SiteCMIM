@@ -214,55 +214,50 @@ console.log("DADOS DO FORM:", {
   }
 
   try {
-    if (isRegister) {
-      // 🔐 CADASTRO
-      const cred = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        senha
-      );
+  if (isRegister) {
+    // 🔐 CADASTRO
+    const cred = await createUserWithEmailAndPassword(auth, email, senha);
+    const uid = cred.user.uid;
 
-      const uid = cred.user.uid;
+    await setDoc(doc(db, "users", uid), {
+      email,
+      lolNick,
+      mainLane,
+      secondaryLane,
+      role: "user",
+      criadoEm: new Date()
+    });
 
-      // 💾 SALVAR DADOS DO USUÁRIO
-      await setDoc(doc(db, "users", uid), {
-  email: email,
-  lolNick: lolNick,
-  mainLane: mainLane,
-  secondaryLane: secondaryLane,
-  role: "user",
-  criadoEm: new Date()
-});
-
-alert("✅ Conta criada com sucesso! Agora faça login.");
-
-await signOut(auth);
-
-toggleForm();
-return;
-    } else {
-  // 🔑 LOGIN com verificação de role
-  const cred = await signInWithEmailAndPassword(auth, email, senha);
-  const uid = cred.user.uid;
-
-  const userDoc = await getDoc(doc(db, "users", uid));
-  if (!userDoc.exists()) {
-    alert("Usuário não encontrado no Firestore!");
+    alert("✅ Conta criada com sucesso! Agora faça login.");
     await signOut(auth);
+    toggleForm();
     return;
-  }
-
-  const userData = userDoc.data();
-
-  if (userData.role === "admin") {
-    alert("Login ADM realizado!");
-    window.location.href = "ADMtabela.html";
   } else {
-    alert("Login realizado como usuário normal!");
-    window.location.href = "tabela.html"; 
+    // 🔑 LOGIN com verificação de role
+    const cred = await signInWithEmailAndPassword(auth, email, senha);
+    const uid = cred.user.uid;
+
+    const userDoc = await getDoc(doc(db, "users", uid));
+    if (!userDoc.exists()) {
+      alert("Usuário não encontrado no Firestore!");
+      await signOut(auth);
+      return;
+    }
+
+    const userData = userDoc.data();
+
+    if (userData.role === "admin") {
+      alert("Login ADM realizado!");
+      window.location.href = "ADMtabela.html";
+    } else {
+      alert("Login realizado como usuário normal!");
+      window.location.href = "tabela.html"; 
+    }
   }
+} catch (error) {
+  alert("Erro: " + error.message);
 }
-};
+}
 </script>
 </body>
 </html>
