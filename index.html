@@ -132,8 +132,9 @@
   import {
     getFirestore,
     doc,
-    setDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    setDoc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // 🔧 Configuração do Firebase (a sua)
   const firebaseConfig = {
@@ -240,14 +241,27 @@ await signOut(auth);
 toggleForm();
 return;
     } else {
-      // 🔑 LOGIN
-      await signInWithEmailAndPassword(auth, email, senha);
-      alert("Login realizado!");
-      window.location.href = "tabela.html";
-    }
-  } catch (error) {
-    alert("Erro: " + error.message);
+  // 🔑 LOGIN com verificação de role
+  const cred = await signInWithEmailAndPassword(auth, email, senha);
+  const uid = cred.user.uid;
+
+  const userDoc = await getDoc(doc(db, "users", uid));
+  if (!userDoc.exists()) {
+    alert("Usuário não encontrado no Firestore!");
+    await signOut(auth);
+    return;
   }
+
+  const userData = userDoc.data();
+
+  if (userData.role === "admin") {
+    alert("Login ADM realizado!");
+    window.location.href = "tabela.html";
+  } else {
+    alert("Login realizado como usuário normal!");
+    window.location.href = "tabela.html"; 
+  }
+}
 };
 </script>
 </body>
