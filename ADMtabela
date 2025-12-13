@@ -284,7 +284,7 @@ function recalcPlayer(p){
   p.pontos = Number(pts.toFixed(2));
 }
 
-let editMode = false;
+let editMode = true;
 
 /* 🔵 NOVA FUNÇÃO: NÃO recalcula durante edição */
 function onPlayerFieldEdit(elem, field, name){
