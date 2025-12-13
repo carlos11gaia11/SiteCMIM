@@ -122,11 +122,12 @@
   // 🔥 Firebase (imports corretos para HTML puro)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+ import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   import {
     getFirestore,
@@ -189,9 +190,17 @@
   const senha = document.getElementById("senha").value;
   const confirmarSenha = document.getElementById("confirmarSenha").value;
 
-  const lolNick = document.getElementById("lolNick").value.trim();
-  const mainLane = document.getElementById("mainLane").value;
-  const secondaryLane = document.getElementById("secondaryLane").value;
+const lolNick = document.getElementById("lolNick").value.trim();
+const mainLane = document.getElementById("mainLane").value;
+const secondaryLane = document.getElementById("secondaryLane").value;
+
+console.log("DADOS DO FORM:", {
+  email,
+  lolNick,
+  mainLane,
+  secondaryLane
+});
+
 
   if (!email || !senha || (isRegister && !confirmarSenha)) {
     alert("Preencha todos os campos!");
@@ -216,13 +225,20 @@
 
       // 💾 SALVAR DADOS DO USUÁRIO
       await setDoc(doc(db, "users", uid), {
-        email: email,
-        role: "user",
-        criadoEm: new Date()
-      });
+  email: email,
+  lolNick: lolNick,
+  mainLane: mainLane,
+  secondaryLane: secondaryLane,
+  role: "user",
+  criadoEm: new Date()
+});
 
-      alert("Conta criada com sucesso! Agora faça login.");
-      toggleForm();
+alert("✅ Conta criada com sucesso! Agora faça login.");
+
+await signOut(auth);
+
+toggleForm();
+return;
     } else {
       // 🔑 LOGIN
       await signInWithEmailAndPassword(auth, email, senha);
