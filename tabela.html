@@ -8,6 +8,7 @@
 <style>
   body{margin:0;font-family:Montserrat,sans-serif;background:#051018;color:#e6f0f3;padding:20px;}
   h1{font-size:20px;font-weight:800;margin-bottom:16px;}
+  button{padding:6px 12px;border-radius:8px;font-weight:600;background:#00e5a8;color:#001112;border:none;cursor:pointer;margin-bottom:16px;}
   table{width:100%;border-collapse:collapse;margin-bottom:20px;}
   th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center;}
   th{color:#9aa7b2;font-weight:600;position:sticky;top:0;background:#0f1720;}
@@ -19,6 +20,7 @@
 <body>
 
 <h1>CMIM - Tabela de Pontuação Insalubrinho</h1>
+<button id="refreshBtn">Atualizar Tabela</button>
 
 <h2>Jogadores</h2>
 <table id="playersTable">
@@ -63,7 +65,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // 🔹 Config do Firebase
   const firebaseConfig = {
     apiKey: "SUA_API_KEY",
     authDomain: "SEU_DOMINIO.firebaseapp.com",
@@ -75,7 +76,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // 🔹 Função para renderizar jogadores
   function renderPlayers(players){
     const tbody = document.querySelector('#playersTable tbody');
     tbody.innerHTML = '';
@@ -101,7 +101,6 @@
     });
   }
 
-  // 🔹 Função para renderizar histórico
   function renderHistory(history){
     const tbody = document.querySelector('#historyTable tbody');
     tbody.innerHTML = '';
@@ -120,15 +119,24 @@
     });
   }
 
-  // 🔹 Carregar dados do Firestore
-  db.collection('cmim').doc('data').get().then(doc=>{
-    if(!doc.exists) return console.error('Documento cmim/data não encontrado.');
-    const data = doc.data();
-    renderPlayers(data.players || []);
-    renderHistory(data.history || []);
-  }).catch(err=>{
-    console.error('Erro ao carregar dados:', err);
+  function loadDataFromFirestore(){
+    db.collection('cmim').doc('data').get().then(doc=>{
+      if(!doc.exists) return console.error('Documento cmim/data não encontrado.');
+      const data = doc.data();
+      renderPlayers(data.players || []);
+      renderHistory(data.history || []);
+    }).catch(err=>{
+      console.error('Erro ao carregar dados:', err);
+    });
+  }
+
+  // Botão de atualizar
+  document.getElementById('refreshBtn').addEventListener('click', ()=>{
+    loadDataFromFirestore();
   });
+
+  // Carrega tabela ao iniciar
+  loadDataFromFirestore();
 </script>
 
 </body>
