@@ -65,6 +65,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+  // 🔵 Configuração Firebase
   const firebaseConfig = {
     apiKey: "SUA_API_KEY",
     authDomain: "SEU_DOMINIO.firebaseapp.com",
@@ -76,6 +77,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // 🔵 Renderização das tabelas
   function renderPlayers(players){
     const tbody = document.querySelector('#playersTable tbody');
     tbody.innerHTML = '';
@@ -119,25 +121,37 @@
     });
   }
 
-  function loadDataFromFirestore(){
-    db.collection('cmim').doc('state').get()
-      .then(doc=>{
-        if(!doc.exists) return console.error('Documento cmim/data não encontrado.');
+  // 🔵 Função de carregamento em tempo real
+  function loadDataFromFirestoreRealtime() {
+    db.collection('cmim').doc('state')
+      .onSnapshot(doc => {
+        if (!doc.exists) return console.error('Documento cmim/state não encontrado.');
         const data = doc.data();
         renderPlayers(data.players || []);
         renderHistory(data.history || []);
-      })
-      .catch(err=>{
+        console.log("Tabela atualizada!");
+      }, err => {
         console.error('Erro ao carregar dados:', err);
       });
   }
 
-  document.getElementById('refreshBtn').addEventListener('click', loadDataFromFirestore);
+  // 🔵 Refresh manual
+  document.getElementById('refreshBtn').addEventListener('click', ()=>{
+    console.log("Atualizando tabela manualmente...");
+    db.collection('cmim').doc('state').get()
+      .then(doc=>{
+        if(!doc.exists) return console.error('Documento cmim/state não encontrado.');
+        const data = doc.data();
+        renderPlayers(data.players || []);
+        renderHistory(data.history || []);
+        console.log("Refresh manual concluído!");
+      })
+      .catch(err=>console.error(err));
+  });
 
-  // Carrega tabela ao iniciar
-  loadDataFromFirestore();
+  // 🔵 Inicialização
+  loadDataFromFirestoreRealtime();
 </script>
 
 </body>
 </html>
-
