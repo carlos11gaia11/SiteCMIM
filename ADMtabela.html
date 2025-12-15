@@ -328,7 +328,13 @@ function renderHistory(){
   tbody.innerHTML='';
   const q=(document.getElementById('historyFilter').value||'').toLowerCase();
   state.history.filter(h=>{
-    const allPlayers=[...h.t1,...h.t2,h.mvp,h.bagre].join(' ').toLowerCase();
+    const allPlayers = [
+  ...h.t1,
+  ...h.t2,
+  h.mvp || '',
+  h.bagre || ''
+].join(' ').toLowerCase();
+
     return allPlayers.includes(q);
   }).forEach(h=>{
     const tr=document.createElement('tr');
@@ -337,8 +343,8 @@ function renderHistory(){
       <td>${h.t2.join(', ')}</td>
       <td>${h.md3}</td>
       <td>${h.winner}</td>
-      <td>${h.mvp}</td>
-      <td>${h.bagre}</td>`;
+      <td>${h.mvp || '-'}</td>
+      <td>${h.bagre || '-'}</td>`;
     tbody.appendChild(tr);
   });
 }
