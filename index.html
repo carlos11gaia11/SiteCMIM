@@ -1,187 +1,284 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CMIM - Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CMIM - Login</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: url('cmim.png') no-repeat center center / cover;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  backdrop-filter: brightness(0.3);
-}
-.container {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 40px;
-  border-radius: 12px;
-  width: 350px;
-  color: yellow;
-}
-h2 { text-align: center; margin-bottom: 20px; }
-input, select {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: none;
-}
-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  background: yellow;
-  font-weight: bold;
-  cursor: pointer;
-}
-.switch {
-  margin-top: 15px;
-  text-align: center;
-  cursor: pointer;
-}
-</style>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('cmim.png') no-repeat center center / cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      backdrop-filter: brightness(0.3);
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 40px;
+      border-radius: 12px;
+      width: 360px;
+      color: yellow;
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #FFD700;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: yellow;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #e6d400;
+    }
+
+    .switch {
+      margin-top: 15px;
+      text-align: center;
+      cursor: pointer;
+      color: #FFD700;
+      font-size: 14px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-<h2 id="formTitle">Login CMIM</h2>
+  <div class="container">
+    <h2 id="formTitle">Login CMIM</h2>
 
-<input type="email" id="email" placeholder="Seu Email" />
+    <input type="email" id="email" placeholder="Seu Email" />
 
-<input type="text" id="lolNick" placeholder="Nick do LoL (ex: 11gaia11#000)" style="display:none" />
+    <!-- CAMPOS DE CADASTRO -->
+    <input
+      type="text"
+      id="lolNick"
+      placeholder="Nick do LoL (ex: 11gaia11#000)"
+      style="display: none;"
+    />
 
-<select id="elo" style="display:none">
-  <option value="">Elo Atual</option>
-  <option>Desafiante</option>
-  <option>Grão-Mestre</option>
-  <option>Mestre</option>
-  <option>Diamante</option>
-  <option>Esmeralda</option>
-  <option>Platina</option>
-  <option>Ouro</option>
-  <option>Prata</option>
-  <option>Bronze</option>
-  <option>Ferro</option>
-</select>
+    <select id="elo" style="display: none;">
+      <option value="">Elo Atual</option>
+      <option value="Desafiante">Desafiante</option>
+      <option value="Grão Mestre">Grão Mestre</option>
+      <option value="Mestre">Mestre</option>
+      <option value="Diamante">Diamante</option>
+      <option value="Esmeralda">Esmeralda</option>
+      <option value="Platina">Platina</option>
+      <option value="Ouro">Ouro</option>
+      <option value="Prata">Prata</option>
+      <option value="Bronze">Bronze</option>
+      <option value="Ferro">Ferro</option>
+    </select>
 
-<select id="mainLane" style="display:none">
-  <option value="">Main Lane</option>
-  <option>TOP</option>
-  <option>JUNGLE</option>
-  <option>MID</option>
-  <option>ADC</option>
-  <option>SUPPORT</option>
-</select>
+    <select id="mainLane" style="display: none;">
+      <option value="">Main Lane</option>
+      <option value="TOP">Top</option>
+      <option value="JUNGLE">Jungle</option>
+      <option value="MID">Mid</option>
+      <option value="ADC">ADC</option>
+      <option value="SUPPORT">Support</option>
+    </select>
 
-<select id="secondaryLane" style="display:none">
-  <option value="">Lane Secundária</option>
-  <option>TOP</option>
-  <option>JUNGLE</option>
-  <option>MID</option>
-  <option>ADC</option>
-  <option>SUPPORT</option>
-</select>
+    <select id="secondaryLane" style="display: none;">
+      <option value="">Lane Secundária</option>
+      <option value="TOP">Top</option>
+      <option value="JUNGLE">Jungle</option>
+      <option value="MID">Mid</option>
+      <option value="ADC">ADC</option>
+      <option value="SUPPORT">Support</option>
+    </select>
 
-<input type="password" id="senha" placeholder="Senha" />
-<input type="password" id="confirmarSenha" placeholder="Confirmar Senha" style="display:none" />
+    <input type="password" id="senha" placeholder="Senha" />
 
-<button id="actionBtn" onclick="handleAuth()">Entrar</button>
-<div class="switch" onclick="toggleForm()" id="switchText">Não tem conta? Cadastre-se.</div>
-</div>
+    <input
+      type="password"
+      id="confirmarSenha"
+      placeholder="Confirmar Senha"
+      style="display: none;"
+    />
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <button id="actionBtn" onclick="handleAuth()">Entrar</button>
 
-const firebaseConfig = {
- apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
- authDomain: "login-cmim.firebaseapp.com",
- projectId: "login-cmim",
- storageBucket: "login-cmim.firebasestorage.app",
- messagingSenderId: "1003784143194",
- appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
-};
+    <div class="switch" onclick="toggleForm()" id="switchText">
+      Não tem conta? Cadastre-se.
+    </div>
+  </div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let isRegister = false;
+    const firebaseConfig = {
+      apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+      authDomain: "login-cmim.firebaseapp.com",
+      projectId: "login-cmim",
+      storageBucket: "login-cmim.firebasestorage.app",
+      messagingSenderId: "1003784143194",
+      appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
+    };
 
-window.toggleForm = () => {
- isRegister = !isRegister;
- document.getElementById("formTitle").innerText = isRegister ? "Cadastrar Conta" : "Login CMIM";
- document.getElementById("actionBtn").innerText = isRegister ? "Cadastrar" : "Entrar";
- document.getElementById("switchText").innerText = isRegister ? "Já tem conta? Faça login." : "Não tem conta? Cadastre-se.";
- ["lolNick","elo","mainLane","secondaryLane","confirmarSenha"].forEach(id=>{
-   document.getElementById(id).style.display = isRegister ? "block" : "none";
- });
-};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-function calcularTier(elo){
- const map = {
-  "Desafiante":"S+",
-  "Grão-Mestre":"S",
-  "Mestre":"A",
-  "Diamante":"B",
-  "Esmeralda":"C",
-  "Platina":"D",
-  "Ouro":"E",
-  "Prata":"F",
-  "Bronze":"F",
-  "Ferro":"F"
- };
- return map[elo];
-}
+    let isRegister = false;
 
-window.handleAuth = async () => {
- const email = email.value.trim();
- const senha = document.getElementById("senha").value;
- const confirmarSenha = document.getElementById("confirmarSenha").value;
+    window.toggleForm = function () {
+      isRegister = !isRegister;
 
- const lolNick = document.getElementById("lolNick").value.trim();
- const elo = document.getElementById("elo").value;
- const mainLane = mainLane.value;
- const secondaryLane = secondaryLane.value;
+      document.getElementById("formTitle").textContent =
+        isRegister ? "Cadastrar Conta" : "Login CMIM";
 
- if (isRegister && senha !== confirmarSenha) return alert("Senhas não coincidem");
+      document.getElementById("actionBtn").textContent =
+        isRegister ? "Cadastrar" : "Entrar";
 
- try {
- if (isRegister) {
-  const cred = await createUserWithEmailAndPassword(auth, email, senha);
-  const tier = calcularTier(elo);
-  const queueType = ["S+","S","A"].includes(tier) ? "insalubrao" : "insalubrinho";
+      document.getElementById("switchText").textContent =
+        isRegister
+          ? "Já tem conta? Faça login."
+          : "Não tem conta? Cadastre-se.";
 
-  await setDoc(doc(db,"users",cred.user.uid),{
-   email,
-   lolNick,
-   elo,
-   tier,
-   queueType,
-   mainLane,
-   secondaryLane,
-   role:"user",
-   criadoEm:new Date()
-  });
+      ["lolNick", "elo", "mainLane", "secondaryLane", "confirmarSenha"]
+        .forEach(id => {
+          document.getElementById(id).style.display =
+            isRegister ? "block" : "none";
+        });
+    };
 
-  alert("Conta criada!");
-  await signOut(auth);
-  toggleForm();
- } else {
-  const cred = await signInWithEmailAndPassword(auth,email,senha);
-  const userDoc = await getDoc(doc(db,"users",cred.user.uid));
-  const data = userDoc.data();
-  window.location.href = data.role==="admin" ? "ADMtabela.html" : "menu.html";
- }
- } catch(e){ alert(e.message); }
-};
-</script>
+    function calcularTier(elo) {
+      switch (elo) {
+        case "Desafiante": return "S+";
+        case "Grão Mestre": return "S";
+        case "Mestre": return "A";
+        case "Diamante": return "B";
+        case "Esmeralda": return "C";
+        case "Platina": return "D";
+        case "Ouro": return "E";
+        default: return "F";
+      }
+    }
+
+    function tipoInsalubridade(tier) {
+      return ["S+", "S", "A"].includes(tier)
+        ? "Insalubrão"
+        : "Insalubrinho";
+    }
+
+    window.handleAuth = async function () {
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+      const confirmarSenha = document.getElementById("confirmarSenha").value;
+
+      const lolNick = document.getElementById("lolNick").value.trim();
+      const elo = document.getElementById("elo").value;
+      const mainLane = document.getElementById("mainLane").value;
+      const secondaryLane = document.getElementById("secondaryLane").value;
+
+      if (!email || !senha) {
+        alert("Preencha email e senha!");
+        return;
+      }
+
+      if (isRegister) {
+        if (!lolNick || !elo || !mainLane || !secondaryLane || !confirmarSenha) {
+          alert("Preencha TODOS os campos do cadastro!");
+          return;
+        }
+
+        if (senha !== confirmarSenha) {
+          alert("As senhas não coincidem!");
+          return;
+        }
+      }
+
+      try {
+        if (isRegister) {
+          const cred = await createUserWithEmailAndPassword(auth, email, senha);
+          const uid = cred.user.uid;
+
+          const tier = calcularTier(elo);
+          const tipo = tipoInsalubridade(tier);
+
+          await setDoc(doc(db, "users", uid), {
+            email,
+            lolNick,
+            elo,
+            tier,
+            tipo,
+            mainLane,
+            secondaryLane,
+            role: "user",
+            criadoEm: new Date()
+          });
+
+          alert(
+            `✅ Conta criada com sucesso!\n\n` +
+            `🎮 Elo: ${elo}\n` +
+            `🏅 Tier: ${tier}\n` +
+            `🔥 Você é do ${tipo}`
+          );
+
+          await signOut(auth);
+          toggleForm();
+        } else {
+          const cred = await signInWithEmailAndPassword(auth, email, senha);
+          const uid = cred.user.uid;
+
+          const userDoc = await getDoc(doc(db, "users", uid));
+          if (!userDoc.exists()) {
+            alert("Usuário não encontrado!");
+            return;
+          }
+
+          const userData = userDoc.data();
+
+          if (userData.role === "admin") {
+            window.location.href = "ADMtabela.html";
+          } else {
+            window.location.href = "menu.html";
+          }
+        }
+      } catch (error) {
+        alert("Erro: " + error.message);
+      }
+    };
+  </script>
 </body>
 </html>
