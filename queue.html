@@ -72,7 +72,7 @@ onAuthStateChanged(auth, async user=>{
 });
 
 function carregarFilas(){
- const q=query(collection(db,"queues"),orderBy("criadaEm","asc"));
+ const q = collection(db,"queues");
  onSnapshot(q,snap=>{
   const div=document.getElementById("listaFilas");
   div.innerHTML="";
@@ -188,3 +188,4 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
