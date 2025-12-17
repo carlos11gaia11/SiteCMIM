@@ -272,7 +272,7 @@ window.handleAuth = async () => {
     const cred = await signInWithEmailAndPassword(auth, email, senha);
     const snap = await getDoc(doc(db,"users",cred.user.uid));
     location.href = snap.data().role === "admin"
-      ? "ADMtabela.html"
+      ? "menu.html" 
       : "menu.html";
   } catch (e) {
     alert("Erro no login: " + e.message);
@@ -282,4 +282,5 @@ window.handleAuth = async () => {
 
 </body>
 </html>
+
 
