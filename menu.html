@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liga CMIM</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: white;
+            color: black;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.8;
+            animation: fadeIn 1.5s ease;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url('cmim.png') no-repeat center center;
+            background-size: cover;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        /* Navbar */
+        nav {
+            background-color: black;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 1s ease;
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-title img {
+            width: 40px;
+            height: 40px;
+        }
+
+        nav h1 {
+            color: yellow;
+            font-size: 24px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: yellow;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #ffeb3b;
+            transform: scale(1.1);
+        }
+
+        /* Main */
+        main {
+            flex: 1;
+            padding: 40px 20px;
+            animation: fadeIn 2s ease;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        main h2,
+        main h3 {
+            margin: 30px 0 15px;
+        }
+
+        main p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        /* Carrossel */
+        .carousel {
+            position: relative;
+            max-width: 500px;
+            height: 280px;
+            margin: 30px auto;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .slides {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slides img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: black;
+            flex-shrink: 0;
+        }
+
+        .carousel-buttons {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .carousel-buttons button {
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: yellow;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .carousel-buttons button:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        /* Footer */
+        footer {
+            background-color: black;
+            color: yellow;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        footer img {
+            width: 45px;
+            margin-top: 5px;
+            transition: 0.3s;
+        }
+
+        footer img:hover {
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            footer {
+                flex-direction: column;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* Dropdown In House */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: black;
+    list-style: none;
+    min-width: 180px;
+    padding: 10px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: 0.3s ease;
+    border-radius: 0 0 8px 8px;
+    z-index: 1000;
+}
+
+.dropdown-menu li {
+    padding: 8px 20px;
+}
+
+.dropdown-menu li a {
+    color: yellow;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+}
+
+.dropdown-menu li a:hover {
+    background-color: rgba(255,255,0,0.1);
+}
+
+/* Hover */
+.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.dropdown-menu {
+    display: flex;
+    flex-direction: column; /* ISSO faz descer */
+}
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <div class="logo-title">
+        <img src="logocmim.png" alt="Logo CMIM">
+        <h1>Liga CMIM</h1>
+    </div>
+    <ul>
+        <li class="dropdown">
+    <a href="inhouse.html">In House ▾</a>
+    <ul class="dropdown-menu">
+        <li><a href="#">Insalubrão</a></li>
+        <li><a href="#">Insalubrinho</a></li>
+        <li><a href="#">Regras</a></li>
+        <li><a href="#">Player Select</a></li>
+    </ul>
+</li>
+        <li><a href="#">Liga CMIM</a></li>
+        <li><a href="#">História</a></li>
+        <li><a href="#">Contato</a></li>
+    </ul>
+</nav>
+
+<main>
+    <div class="container">
+
+        <h2>O que é a CMIM?</h2>
+        <p>
+            A <strong>CMIM</strong> 💀 O que é a CMIM?
+
+CMIM significa Comunidade Mais Insalubre do Mundo.
+
+<p>É uma comunidade competitiva de League of Legends criada pra quem leva o jogo a sério, mas sem perder a resenha. A CMIM existe pra desenvolver jogadores, criar ambiente competitivo de verdade e organizar eventos estruturados — desde In House até campeonatos oficiais.
+
+Aqui o foco é: </p>
+
+<p>⚔️ Competitividade real</p>
+
+<p>📈 Evolução individual e coletiva</p>
+
+<p>🧠 Treinamento pra jogadores T2 e T3</p>
+
+<p>🤝 Comunidade ativa, com personalidade, zoeira e identidade própria</p>
+
+O In House CMIM é o carro-chefe: partidas organizadas, regras claras, avaliação de desempenho e foco total em crescimento.
+        </p>
+        <br>
+        <h3>O In House CMIM</h3>
+        <p>
+            Nosso carro-chefe. Um ambiente competitivo estruturado para preparar jogadores T2 e T3,
+            elevando o nível da comunidade e formando novos talentos.
+        </p>
+
+        <div class="carousel">
+            <div class="slides">
+                <img src="ligacmim.png">
+                <img src="comunidadecmim.png">
+                <img src="Banner1.png">
+            </div>
+            <div class="carousel-buttons">
+                <button id="prev">&#10094;</button>
+                <button id="next">&#10095;</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <div>
+        <p>Nos siga nas redes:</p>
+        <a href="https://www.instagram.com/ligacmim/" target="_blank">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png">
+        </a>
+        <a href="https://chat.whatsapp.com/BpxO0ByWcTNH1ktkL1EvzM" target="_blank">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg">
+        </a>
+    </div>
+
+    <div>
+        <p>Contato:</p>
+        <p>Email: contato@cmim.com.br</p>
+        <p>Telefone: +55 11 99999-9999</p>
+    </div>
+
+    <p>&copy; 2025 Liga CMIM</p>
+</footer>
+
+<script>
+    const slides = document.querySelector('.slides');
+    const images = document.querySelectorAll('.slides img');
+    let index = 0;
+
+    document.getElementById('prev').onclick = () => move(-1);
+    document.getElementById('next').onclick = () => move(1);
+
+    function move(step) {
+        index = (index + step + images.length) % images.length;
+        slides.style.transform = `translateX(-${index * 100}%)`;
+    }
+</script>
+
+</body>
+</html>

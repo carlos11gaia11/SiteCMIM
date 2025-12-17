@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In House CMIM</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    body {
+        background-color: white;
+        color: black;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        animation: fadeIn 1.5s ease;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('cmim.png') no-repeat center center;
+        background-size: cover;
+        opacity: 0.1;
+        z-index: -1;
+    }
+
+    /* Navbar */
+    nav {
+        background-color: black;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 1s ease;
+    }
+
+    .logo-title { display: flex; align-items: center; gap: 10px; }
+    .logo-title img { width: 40px; height: 40px; }
+    nav h1 { color: yellow; font-size: 24px; }
+    nav ul { list-style: none; display: flex; gap: 20px; }
+    nav ul li a { text-decoration: none; color: yellow; font-weight: bold; transition: color 0.3s, transform 0.3s; }
+    nav ul li a:hover { color: #ffeb3b; transform: scale(1.1); }
+    nav ul li a.active { border-bottom: 2px solid yellow; }
+
+    /* Main */
+    main { padding: 40px 30px; flex: 1; animation: fadeIn 2s ease; }
+
+    main h2, main h3 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: #000;
+    }
+
+    main p, main li {
+        font-size: 18px;
+        line-height: 1.8;
+        text-align: justify;
+        margin-bottom: 20px;
+    }
+
+    ul.rules { margin-left: 20px; }
+
+    .highlight {
+        background: rgba(0,0,0,0.05);
+        padding: 20px;
+        border-left: 5px solid black;
+        border-radius: 10px;
+        margin: 30px 0;
+    }
+
+    /* Footer */
+    footer {
+        background-color: black;
+        color: yellow;
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        animation: fadeIn 2s ease;
+    }
+
+    footer .social, footer .contact {
+        display: flex; flex-direction: column; gap: 5px;
+    }
+
+    footer img { width: 50px; height: 50px; margin: 5px 0; transition: transform 0.3s; }
+    footer img:hover { transform: scale(1.2); }
+
+    @media(max-width: 768px){
+        nav ul { flex-direction: column; gap: 10px; }
+        footer { flex-direction: column; gap: 15px; }
+    }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo-title">
+        <img src="logocmim.png" alt="Logo CMIM">
+        <h1>Liga CMIM</h1>
+    </div>
+    <ul>
+        <li><a href="inhouse.html" class="active">In House</a></li>
+        <li><a href="index.html">Liga CMIM</a></li>
+        <li><a href="#">História</a></li>
+        <li><a href="#">Contato</a></li>
+    </ul>
+</nav>
+
+<main>
+    <h2>O que é o In House CMIM?</h2>
+    <p>
+        O <strong>In House CMIM</strong> é o principal ambiente competitivo da comunidade. Ele foi criado para simular partidas sérias, organizadas e balanceadas, focadas no <strong>desenvolvimento individual e coletivo</strong> dos jogadores.
+    </p>
+
+    <div class="highlight">
+        <p>
+            Aqui, o objetivo não é apenas ganhar, mas <strong>evoluir</strong>: melhorar tomada de decisão, comunicação, macro game e disciplina competitiva.
+        </p>
+    </div>
+
+    <h3>Como funciona</h3>
+    <ul class="rules">
+        <li>Jogadores são organizados por <strong>tier e lane</strong></li>
+        <li>Times balanceados automaticamente ou por staff</li>
+        <li>Partidas valendo pontuação individual</li>
+        <li>Análise de desempenho (vitória, MVP, penalidades)</li>
+    </ul>
+
+    <h3>Objetivo do In House</h3>
+    <p>
+        O In House serve como base de treinamento para jogadores <strong>T2 e T3</strong>, preparando quem quer competir em campeonatos maiores como o <strong>CMIM Open</strong> e futuras ligas organizadas.
+    </p>
+
+    <h3>Regras Gerais</h3>
+    <ul class="rules">
+        <li>Respeito é obrigatório</li>
+        <li>Comportamento tóxico gera penalidade</li>
+        <li>AFK e troll são punidos</li>
+        <li>Decisões da staff são finais</li>
+    </ul>
+
+    <div class="highlight">
+        <p>
+            O In House é competitivo, mas também é comunidade. Jogue sério, evolua e curta o processo.
+        </p>
+    </div>
+</main>
+
+<footer>
+    <div class="social">
+        <p>Nos siga nas redes:</p>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    </div>
+    <div class="contact">
+        <p>Contato:</p>
+        <p>Email: contato@cmim.com.br</p>
+        <p>Telefone: +55 11 99999-9999</p>
+    </div>
+    <p>&copy; 2025 Liga CMIM. Todos os direitos reservados.</p>
+</footer>
+
+</body>
+</html>
