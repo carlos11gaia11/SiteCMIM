@@ -72,7 +72,7 @@ onAuthStateChanged(auth, async user=>{
 });
 
 function carregarFilas(){
- const q=query(collection(db,"queues"),orderBy("criadaEm","asc"));
+ const q = collection(db,"queues");
  onSnapshot(q,snap=>{
   const div=document.getElementById("listaFilas");
   div.innerHTML="";
@@ -96,12 +96,19 @@ function renderFila(id,data,container){
  ${["top","jg","mid","adc","sup"].map(l=>`
   <div class="lane">
    <h3>${l.toUpperCase()}</h3>
-   ${(data.lanes[l]||[]).map(p=>`
+   ${Array.from({ length: 2 }).map((_, idx) => {
+  const p = data.lanes[l][idx];
+  return p ? `
     <div class="slot">
-     ${p.nick}
-     ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
-    </div>`).join("")}
-   ${data.lanes[l].length<2?`<div class="slot">Vaga</div>`:""}
+      ${p.nick}
+      ${(isAdmin || p.uid === currentUser.uid)
+        ? `<button onclick="remover('${id}','${p.uid}')">❌</button>`
+        : ""}
+    </div>
+  ` : `
+    <div class="slot">Vaga</div>
+  `;
+}).join("")}
   </div>`).join("")}
  </div>
 
@@ -188,3 +195,4 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
