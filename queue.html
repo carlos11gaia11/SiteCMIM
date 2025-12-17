@@ -9,36 +9,25 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-body{min-height:100vh;background:#f4f6f8;display:flex;flex-direction:column}
-.navbar{background:#111;color:#fff;padding:16px 32px;display:flex;justify-content:space-between;align-items:center}
-.user-info{font-size:13px;color:#ddd}
-.main{flex:1;display:flex;justify-content:center;align-items:center;padding:40px}
-.queue-container{width:100%;max-width:900px;background:#fff;border-radius:16px;padding:32px;box-shadow:0 10px 30px rgba(0,0,0,.08);position:relative}
-.queue-container::before{content:"";position:absolute;inset:0;background:url('cmim.png') center/contain no-repeat;opacity:.05}
-.queue-header{display:flex;justify-content:space-between;margin-bottom:24px;position:relative}
-.badge{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600}
+body{background:#f4f6f8}
+.navbar{background:#111;color:#fff;padding:16px 32px;display:flex;justify-content:space-between}
+.main{padding:40px;max-width:1100px;margin:auto}
+.queue{background:#fff;border-radius:16px;padding:24px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,.08);position:relative}
+.queue::before{content:"";position:absolute;inset:0;background:url('cmim.png') center/contain no-repeat;opacity:.04;pointer-events:none}
+.header{display:flex;justify-content:space-between;margin-bottom:16px}
+.badge{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
 .md{background:#eef2ff;color:#4338ca}
-.open{background:#e6f9f0;color:#0f9d58}
-.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
-.lane{background:#f9fafb;border-radius:12px;padding:12px;border:1px solid #e5e7eb}
-.lane h3{text-align:center;font-size:14px;margin-bottom:8px}
-.slot{background:#fff;border-radius:8px;padding:6px 8px;font-size:13px;margin-bottom:6px;border:1px dashed #d1d5db;display:flex;justify-content:space-between}
-.slot button{background:none;border:none;cursor:pointer}
-.overflow h3{font-size:14px;margin-bottom:8px;color:#b45309}
-.overflow-list{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;font-size:13px}
-.form{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:20px}
-.form select,.form button{padding:10px;border-radius:8px;border:1px solid #d1d5db}
-.form button{background:#111;color:#fff;font-weight:600;cursor:pointer}
-footer{background:#111;color:#aaa;text-align:center;padding:12px;font-size:12px}
-
-  .queue-container::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:url('cmim.png') center/contain no-repeat;
-  opacity:.05;
-  pointer-events: none; /* 🔥 ISSO RESOLVE */
-}
+.time{background:#e6f9f0;color:#0f9d58}
+.lanes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.lane{background:#f9fafb;border-radius:12px;padding:10px;border:1px solid #e5e7eb}
+.lane h3{text-align:center;font-size:13px;margin-bottom:6px}
+.slot{background:#fff;border:1px dashed #d1d5db;border-radius:8px;padding:5px;font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between}
+.overflow{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px;font-size:13px}
+.form{margin-top:12px;display:flex;gap:10px}
+select,button,input{padding:8px;border-radius:8px;border:1px solid #d1d5db}
+button{background:#111;color:#fff;font-weight:600;cursor:pointer}
+.admin{margin-top:10px;background:#111;color:#fff;padding:10px;border-radius:8px}
+.admin input,.admin select{margin-right:6px}
 </style>
 </head>
 
@@ -46,157 +35,156 @@ footer{background:#111;color:#aaa;text-align:center;padding:12px;font-size:12px}
 
 <div class="navbar">
   <h1>CMIM Queue</h1>
-  <div class="user-info" id="userInfo">Carregando...</div>
+  <div id="userInfo">Carregando...</div>
 </div>
 
 <div class="main">
-<div class="queue-container">
-
-<div class="queue-header">
-  <div>
-    <span class="badge md" id="mdBadge">MD3</span>
-    <span class="badge open">Fila Aberta</span>
-    <span class="badge md" id="mdBadge">20:30 Horas</span>
-  </div>
-  <div id="queueTime"></div>
+  <button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">➕ Criar Nova Fila</button>
+  <div id="listaFilas"></div>
 </div>
-
-<div class="lanes">
-  <div class="lane"><h3>TOP</h3><div class="slot"></div><div class="slot"></div></div>
-  <div class="lane"><h3>JG</h3><div class="slot"></div><div class="slot"></div></div>
-  <div class="lane"><h3>MID</h3><div class="slot"></div><div class="slot"></div></div>
-  <div class="lane"><h3>ADC</h3><div class="slot"></div><div class="slot"></div></div>
-  <div class="lane"><h3>SUP</h3><div class="slot"></div><div class="slot"></div></div>
-</div>
-
-<div class="overflow">
-  <h3>🦁 Leão de Vaga</h3>
-  <div class="overflow-list" id="overflowList">Nenhum jogador</div>
-</div>
-
-<form class="form" onsubmit="event.preventDefault(); entrarFila();">
-  <select id="laneSelect" required>
-    <option value="">Escolha a lane</option>
-    <option value="top">Top</option>
-    <option value="jg">JG</option>
-    <option value="mid">Mid</option>
-    <option value="adc">ADC</option>
-    <option value="sup">Sup</option>
-  </select>
-  <button>Entrar na fila</button>
-</form>
-
-</div>
-</div>
-
-<footer>CMIM • Campeonato Mais Insalubre do Mundo</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
  authDomain: "login-cmim.firebaseapp.com",
- projectId: "login-cmim",
- storageBucket: "login-cmim.firebasestorage.app",
- messagingSenderId: "1003784143194",
- appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
+ projectId: "login-cmim"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser, profile;
+let currentUser, profile, isAdmin=false;
 
-function getQueueId(){
- const h=new Date().getHours();
- if(h<17) return "queue_14";
- if(h<20) return "queue_17";
- if(h<23) return "queue_20";
- return "queue_23";
-}
-
-const queueRef = ()=>doc(db,"queues",getQueueId());
-
-onAuthStateChanged(auth,async user=>{
+onAuthStateChanged(auth, async user=>{
  if(!user){location.href="login.html";return}
  currentUser=user;
  const snap=await getDoc(doc(db,"users",user.uid));
  profile=snap.data();
+ isAdmin = profile.role === "admin";
  document.getElementById("userInfo").innerText=`Logado como ${profile.lolNick}`;
- initQueue();
- onSnapshot(queueRef(),s=>render(s.data()));
+ if(isAdmin) document.getElementById("btnCriarFila").style.display="block";
+ carregarFilas();
 });
 
-async function initQueue(){
- const snap=await getDoc(queueRef());
- if(!snap.exists()){
-  await setDoc(queueRef(),{
-   config:{md:"MD3"},
-   lanes:{top:[],jg:[],mid:[],adc:[],sup:[]},
-   overflow:[]
-  });
- }
-}
-
-function render(data){
- const lanes=["top","jg","mid","adc","sup"];
- lanes.forEach((l,i)=>{
-  const slots=document.querySelectorAll(".lane")[i].querySelectorAll(".slot");
-  slots.forEach((s,idx)=>{
-   const p=data.lanes[l][idx];
-   if(p){
-    s.innerHTML=`${p.nick}`+(p.uid===currentUser.uid?` <button onclick="sairFila()">❌</button>`:"");
-   }else s.innerText="Vaga";
-  });
+function carregarFilas(){
+ const q=query(collection(db,"queues"),orderBy("criadaEm","asc"));
+ onSnapshot(q,snap=>{
+  const div=document.getElementById("listaFilas");
+  div.innerHTML="";
+  snap.docs.forEach(d=>renderFila(d.id,d.data(),div));
  });
- document.getElementById("overflowList").innerHTML = data.overflow.length
-  ? data.overflow.map((p, i) => `
-      ${i + 1}. ${p.nick}
-      ${p.uid === currentUser.uid ? 
-        `<button onclick="sairFila()" style="margin-left:8px;cursor:pointer;border:none;background:none">❌</button>` 
-        : ""
-      }
-    `).join("<br>")
-  : "Nenhum jogador";
 }
 
-window.entrarFila=async()=>{
- const lane=document.getElementById("laneSelect").value;
- const snap=await getDoc(queueRef());
+function renderFila(id,data,container){
+ const div=document.createElement("div");
+ div.className="queue";
+
+ div.innerHTML=`
+ <div class="header">
+  <div>
+   <span class="badge md">${data.formato}</span>
+   <span class="badge time">${data.horario}</span>
+  </div>
+ </div>
+
+ <div class="lanes">
+ ${["top","jg","mid","adc","sup"].map(l=>`
+  <div class="lane">
+   <h3>${l.toUpperCase()}</h3>
+   ${(data.lanes[l]||[]).map(p=>`
+    <div class="slot">
+     ${p.nick}
+     ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+    </div>`).join("")}
+   ${data.lanes[l].length<2?`<div class="slot">Vaga</div>`:""}
+  </div>`).join("")}
+ </div>
+
+ <div class="overflow">
+  🦁 Leão de vaga:<br>
+  ${(data.overflow||[]).map(p=>`
+   ${p.nick}
+   ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+  `).join("<br>") || "Nenhum"}
+ </div>
+
+ <form class="form" onsubmit="event.preventDefault();entrar('${id}')">
+  <select required id="lane_${id}">
+   <option value="">Lane</option>
+   <option value="top">Top</option>
+   <option value="jg">JG</option>
+   <option value="mid">Mid</option>
+   <option value="adc">ADC</option>
+   <option value="sup">Sup</option>
+  </select>
+  <button>Entrar</button>
+ </form>
+
+ ${isAdmin?`
+ <div class="admin">
+  <input placeholder="Horário" id="h_${id}">
+  <select id="f_${id}">
+   <option>MD1</option>
+   <option>MD3</option>
+   <option>MD5</option>
+  </select>
+  <button onclick="salvar('${id}')">Salvar</button>
+ </div>`:""}
+ `;
+ container.appendChild(div);
+}
+
+window.entrar=async(id)=>{
+ const lane=document.getElementById("lane_"+id).value;
+ const ref=doc(db,"queues",id);
+ const snap=await getDoc(ref);
  const d=snap.data();
 
  if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))return;
- if(d.overflow.some(p=>p.uid===currentUser.uid))return;
 
- const player={uid:currentUser.uid,nick:profile.lolNick};
+ const p={uid:currentUser.uid,nick:profile.lolNick};
+ if(d.lanes[lane].length<2)d.lanes[lane].push(p);
+ else d.overflow.push(p);
 
- if(d.lanes[lane].length<2)d.lanes[lane].push(player);
- else d.overflow.push(player);
-
- await updateDoc(queueRef(),{lanes:d.lanes,overflow:d.overflow});
+ await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
 };
 
-window.sairFila=async()=>{
- const snap=await getDoc(queueRef());
+window.remover=async(id,uid)=>{
+ const ref=doc(db,"queues",id);
+ const snap=await getDoc(ref);
  const d=snap.data();
- let saiuLane=null;
 
- for(const l in d.lanes){
-  const i=d.lanes[l].findIndex(p=>p.uid===currentUser.uid);
-  if(i!==-1){d.lanes[l].splice(i,1);saiuLane=l;}
- }
- d.overflow=d.overflow.filter(p=>p.uid!==currentUser.uid);
- if(saiuLane&&d.overflow.length)d.lanes[saiuLane].push(d.overflow.shift());
- await updateDoc(queueRef(),{lanes:d.lanes,overflow:d.overflow});
+ for(const l in d.lanes)
+  d.lanes[l]=d.lanes[l].filter(p=>p.uid!==uid);
+
+ d.overflow=d.overflow.filter(p=>p.uid!==uid);
+ await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
+};
+
+window.salvar=async(id)=>{
+ const h=document.getElementById("h_"+id).value;
+ const f=document.getElementById("f_"+id).value;
+ await updateDoc(doc(db,"queues",id),{horario:h,formato:f});
+};
+
+window.criarFila=async()=>{
+ const horario=prompt("Horário da fila:");
+ const formato=prompt("Formato (MD1, MD3, MD5):");
+ if(!horario||!formato)return;
+
+ await setDoc(doc(collection(db,"queues")),{
+  horario,formato,status:"aberta",
+  criadaEm:new Date(),
+  lanes:{top:[],jg:[],mid:[],adc:[],sup:[]},
+  overflow:[]
+ });
 };
 </script>
 
 </body>
 </html>
-
-
-
