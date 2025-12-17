@@ -152,9 +152,15 @@ function render(data){
    }else s.innerText="Vaga";
   });
  });
- document.getElementById("overflowList").innerHTML=data.overflow.length
- ?data.overflow.map((p,i)=>`${i+1}. ${p.nick}`).join("<br>")
- :"Nenhum jogador";
+ document.getElementById("overflowList").innerHTML = data.overflow.length
+  ? data.overflow.map((p, i) => `
+      ${i + 1}. ${p.nick}
+      ${p.uid === currentUser.uid ? 
+        `<button onclick="sairFila()" style="margin-left:8px;cursor:pointer;border:none;background:none">❌</button>` 
+        : ""
+      }
+    `).join("<br>")
+  : "Nenhum jogador";
 }
 
 window.entrarFila=async()=>{
@@ -190,4 +196,5 @@ window.sairFila=async()=>{
 
 </body>
 </html>
+
 
