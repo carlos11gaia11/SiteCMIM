@@ -13,11 +13,13 @@ body{background:#f4f6f8}
 .navbar{background:#111;color:#fff;padding:16px 32px;display:flex;justify-content:space-between}
 .main{padding:40px;max-width:1100px;margin:auto}
 .queue{background:#fff;border-radius:16px;padding:24px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,.08);position:relative}
+.queue.jogar-agora{border:2px solid #22c55e;box-shadow:0 0 25px rgba(34,197,94,.35)}
 .queue::before{content:"";position:absolute;inset:0;background:url('cmim.png') center/contain no-repeat;opacity:.04;pointer-events:none}
 .header{display:flex;justify-content:space-between;margin-bottom:16px}
 .badge{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
 .md{background:#eef2ff;color:#4338ca}
 .time{background:#e6f9f0;color:#0f9d58}
+.now{background:#22c55e;color:#fff}
 .lanes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
 .lane{background:#f9fafb;border-radius:12px;padding:10px;border:1px solid #e5e7eb}
 .lane h3{text-align:center;font-size:13px;margin-bottom:6px}
@@ -39,7 +41,7 @@ button{background:#111;color:#fff;font-weight:600;cursor:pointer}
 </div>
 
 <div class="main">
-  <button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">➕ Criar Nova Fila</button>
+  <button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">➕ Criar Fila Manual</button>
   <div id="listaFilas"></div>
 </div>
 
@@ -72,7 +74,7 @@ onAuthStateChanged(auth, async user=>{
 });
 
 function carregarFilas(){
- const q = collection(db,"queues");
+ const q = query(collection(db,"queues"), orderBy("horario"));
  onSnapshot(q,snap=>{
   const div=document.getElementById("listaFilas");
   div.innerHTML="";
@@ -83,12 +85,15 @@ function carregarFilas(){
 function renderFila(id,data,container){
  const div=document.createElement("div");
  div.className="queue";
+ if(data.tipo==="jogar_agora") div.classList.add("jogar-agora");
 
  div.innerHTML=`
  <div class="header">
   <div>
    <span class="badge md">${data.formato}</span>
-   <span class="badge time">${data.horario}</span>
+   <span class="badge ${data.tipo==="jogar_agora"?"now":"time"}">
+     ${data.tipo==="jogar_agora"?"🔥 Jogar Agora":data.horario}
+   </span>
   </div>
  </div>
 
@@ -96,26 +101,19 @@ function renderFila(id,data,container){
  ${["top","jg","mid","adc","sup"].map(l=>`
   <div class="lane">
    <h3>${l.toUpperCase()}</h3>
-   ${Array.from({ length: 2 }).map((_, idx) => {
-  const p = data.lanes[l][idx];
-  return p ? `
-    <div class="slot">
-      ${p.nick}
-      ${(isAdmin || p.uid === currentUser.uid)
-        ? `<button onclick="remover('${id}','${p.uid}')">❌</button>`
-        : ""}
-    </div>
-  ` : `
-    <div class="slot">Vaga</div>
-  `;
-}).join("")}
+   ${Array.from({length:2}).map((_,i)=>{
+     const p=data.lanes[l][i];
+     return p?`
+      <div class="slot">${p.nick}
+       ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+      </div>`:`<div class="slot">Vaga</div>`;
+   }).join("")}
   </div>`).join("")}
  </div>
 
  <div class="overflow">
   🦁 Leão de vaga:<br>
-  ${(data.overflow||[]).map(p=>`
-   ${p.nick}
+  ${(data.overflow||[]).map(p=>`${p.nick}
    ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
   `).join("<br>") || "Nenhum"}
  </div>
@@ -131,17 +129,6 @@ function renderFila(id,data,container){
   </select>
   <button>Entrar</button>
  </form>
-
- ${isAdmin?`
- <div class="admin">
-  <input placeholder="Horário" id="h_${id}">
-  <select id="f_${id}">
-   <option>MD1</option>
-   <option>MD3</option>
-   <option>MD5</option>
-  </select>
-  <button onclick="salvar('${id}')">Salvar</button>
- </div>`:""}
  `;
  container.appendChild(div);
 }
@@ -173,19 +160,15 @@ window.remover=async(id,uid)=>{
  await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
 };
 
-window.salvar=async(id)=>{
- const h=document.getElementById("h_"+id).value;
- const f=document.getElementById("f_"+id).value;
- await updateDoc(doc(db,"queues",id),{horario:h,formato:f});
-};
-
 window.criarFila=async()=>{
- const horario=prompt("Horário da fila:");
+ const horario=prompt("Horário:");
  const formato=prompt("Formato (MD1, MD3, MD5):");
  if(!horario||!formato)return;
 
  await setDoc(doc(collection(db,"queues")),{
-  horario,formato,status:"aberta",
+  horario,formato,
+  tipo:"jogar_agora",
+  status:"aberta",
   criadaEm:new Date(),
   lanes:{top:[],jg:[],mid:[],adc:[],sup:[]},
   overflow:[]
@@ -195,5 +178,3 @@ window.criarFila=async()=>{
 
 </body>
 </html>
-
-
