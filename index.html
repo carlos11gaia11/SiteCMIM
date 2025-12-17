@@ -136,8 +136,18 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
@@ -151,57 +161,125 @@ const db = getFirestore(app);
 
 let isRegister = false;
 
+const $ = id => document.getElementById(id);
+
 window.toggleForm = () => {
   isRegister = !isRegister;
-  document.getElementById("formTitle").innerText = isRegister ? "Cadastrar Conta" : "Login CMIM";
-  document.getElementById("actionBtn").innerText = isRegister ? "Cadastrar" : "Entrar";
-  document.getElementById("switchText").innerText = isRegister ? "Já tem conta? Faça login." : "Não tem conta? Cadastre-se.";
+
+  $("formTitle").innerText = isRegister ? "Cadastrar Conta" : "Login CMIM";
+  $("actionBtn").innerText = isRegister ? "Cadastrar" : "Entrar";
+  $("switchText").innerText = isRegister
+    ? "Já tem conta? Faça login."
+    : "Não tem conta? Cadastre-se.";
 
   ["lolNick","jaInsalubre","mainLane","secondaryLane","confirmarSenha"]
-    .forEach(id => document.getElementById(id).style.display = isRegister ? "block" : "none");
+    .forEach(id => $(id).style.display = isRegister ? "block" : "none");
 
-  document.getElementById("elo").style.display = "none";
-  document.getElementById("tierManual").style.display = "none";
+  $("elo").style.display = "none";
+  $("tierManual").style.display = "none";
 };
 
 window.toggleInsalubre = () => {
-  const v = jaInsalubre.value;
-  tierManual.style.display = v === "sim" ? "block" : "none";
-  elo.style.display = v === "nao" ? "block" : "none";
+  const v = $("jaInsalubre").value;
+  $("tierManual").style.display = v === "sim" ? "block" : "none";
+  $("elo").style.display = v === "nao" ? "block" : "none";
 };
 
 function calcularTier(elo){
-  return {Desafiante:"S+", "Grão Mestre":"S", Mestre:"A", Diamante:"B", Esmeralda:"C", Platina:"D", Ouro:"E"}[elo] || "F";
+  return {
+    Desafiante:"S+",
+    "Grão Mestre":"S",
+    Mestre:"A",
+    Diamante:"B",
+    Esmeralda:"C",
+    Platina:"D",
+    Ouro:"E"
+  }[elo] || "F";
 }
 
 window.handleAuth = async () => {
-  const email=email.value.trim(), senhaVal=senha.value;
-  if(!email||!senhaVal)return alert("Preencha email e senha");
+  const email = $("email").value.trim();
+  const senha = $("senha").value;
+  const confirmarSenha = $("confirmarSenha").value;
+  const lolNick = $("lolNick").value.trim();
+  const jaInsalubre = $("jaInsalubre").value;
+  const tierManual = $("tierManual").value;
+  const elo = $("elo").value;
+  const mainLane = $("mainLane").value;
+  const secondaryLane = $("secondaryLane").value;
 
-  if(isRegister){
-    if(!lolNick.value||!jaInsalubre.value||!mainLane.value||!secondaryLane.value||senhaVal!==confirmarSenha.value)
-      return alert("Preencha tudo corretamente!");
+  if (!email || !senha) {
+    alert("Preencha email e senha");
+    return;
+  }
 
-    const cred = await createUserWithEmailAndPassword(auth,email,senhaVal);
-    const uid = cred.user.uid;
+  // ================= CADASTRO =================
+  if (isRegister) {
 
-    const tier = jaInsalubre.value==="sim" ? tierManual.value : calcularTier(elo.value);
-    const tipo = ["S+","S","A"].includes(tier) ? "Insalubrão" : "Insalubrinho";
+    if (!lolNick || !jaInsalubre || !mainLane || !secondaryLane) {
+      alert("Preencha todos os campos do cadastro");
+      return;
+    }
 
-    await setDoc(doc(db,"users",uid),{
-      email,lolNick:lolNick.value,elo:elo.value||null,tier,tipo,
-      mainLane:mainLane.value,secondaryLane:secondaryLane.value,role:"user",criadoEm:new Date()
-    });
+    if (senha !== confirmarSenha) {
+      alert("As senhas não coincidem");
+      return;
+    }
 
-    alert("Conta criada com sucesso!");
-    await signOut(auth);
-    toggleForm();
-  } else {
-    const cred = await signInWithEmailAndPassword(auth,email,senhaVal);
+    const tier =
+      jaInsalubre === "sim"
+        ? tierManual
+        : calcularTier(elo);
+
+    if (!tier) {
+      alert("Informe seu tier ou elo corretamente");
+      return;
+    }
+
+    const tipo = ["S+","S","A"].includes(tier)
+      ? "Insalubrão"
+      : "Insalubrinho";
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, senha);
+      const uid = cred.user.uid;
+
+      await setDoc(doc(db,"users",uid),{
+        email,
+        lolNick,
+        elo: elo || null,
+        tier,
+        tipo,
+        mainLane,
+        secondaryLane,
+        role:"user",
+        criadoEm:new Date()
+      });
+
+      alert(`✅ Conta criada!\n🔥 Você é do ${tipo}`);
+      await signOut(auth);
+      toggleForm();
+
+    } catch (e) {
+      alert("Erro no cadastro: " + e.message);
+    }
+
+    return;
+  }
+
+  // ================= LOGIN =================
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, senha);
     const snap = await getDoc(doc(db,"users",cred.user.uid));
-    location.href = snap.data().role==="admin"?"ADMtabela.html":"menu.html";
+    location.href = snap.data().role === "admin"
+      ? "ADMtabela.html"
+      : "menu.html";
+  } catch (e) {
+    alert("Erro no login: " + e.message);
   }
 };
 </script>
+
 </body>
 </html>
+
