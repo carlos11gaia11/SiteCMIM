@@ -54,10 +54,6 @@
       font-size: 15px;
     }
 
-    button:hover {
-      background: #e6d400;
-    }
-
     .switch {
       margin-top: 15px;
       text-align: center;
@@ -70,215 +66,142 @@
 
 <body>
 
-  <div class="container">
-    <h2 id="formTitle">Login CMIM</h2>
+<div class="container">
+  <h2 id="formTitle">Login CMIM</h2>
 
-    <input type="email" id="email" placeholder="Seu Email" />
+  <input type="email" id="email" placeholder="Seu Email" />
 
-    <!-- CAMPOS DE CADASTRO -->
-    <input
-      type="text"
-      id="lolNick"
-      placeholder="Nick do LoL (ex: 11gaia11#000)"
-      style="display: none;"
-    />
+  <!-- CADASTRO -->
+  <input type="text" id="lolNick" placeholder="Nick do LoL (ex: 11gaia11#000)" style="display:none">
 
-    <select id="elo" style="display: none;">
-      <option value="">Elo Atual</option>
-      <option value="Desafiante">Desafiante</option>
-      <option value="Grão Mestre">Grão Mestre</option>
-      <option value="Mestre">Mestre</option>
-      <option value="Diamante">Diamante</option>
-      <option value="Esmeralda">Esmeralda</option>
-      <option value="Platina">Platina</option>
-      <option value="Ouro">Ouro</option>
-      <option value="Prata">Prata</option>
-      <option value="Bronze">Bronze</option>
-      <option value="Ferro">Ferro</option>
-    </select>
+  <select id="jaInsalubre" style="display:none" onchange="toggleInsalubre()">
+    <option value="">Você já faz parte do In House CMIM?</option>
+    <option value="sim">Sim</option>
+    <option value="nao">Não</option>
+  </select>
 
-    <select id="mainLane" style="display: none;">
-      <option value="">Main Lane</option>
-      <option value="TOP">Top</option>
-      <option value="JUNGLE">Jungle</option>
-      <option value="MID">Mid</option>
-      <option value="ADC">ADC</option>
-      <option value="SUPPORT">Support</option>
-    </select>
+  <select id="tierManual" style="display:none">
+    <option value="">Seu Tier</option>
+    <option value="S+">S+</option>
+    <option value="S">S</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+    <option value="E">E</option>
+    <option value="F">F</option>
+  </select>
 
-    <select id="secondaryLane" style="display: none;">
-      <option value="">Lane Secundária</option>
-      <option value="TOP">Top</option>
-      <option value="JUNGLE">Jungle</option>
-      <option value="MID">Mid</option>
-      <option value="ADC">ADC</option>
-      <option value="SUPPORT">Support</option>
-    </select>
+  <select id="elo" style="display:none">
+    <option value="">Elo Atual</option>
+    <option>Desafiante</option>
+    <option>Grão Mestre</option>
+    <option>Mestre</option>
+    <option>Diamante</option>
+    <option>Esmeralda</option>
+    <option>Platina</option>
+    <option>Ouro</option>
+    <option>Prata</option>
+    <option>Bronze</option>
+    <option>Ferro</option>
+  </select>
 
-    <input type="password" id="senha" placeholder="Senha" />
+  <select id="mainLane" style="display:none">
+    <option value="">Main Lane</option>
+    <option>TOP</option>
+    <option>JUNGLE</option>
+    <option>MID</option>
+    <option>ADC</option>
+    <option>SUPPORT</option>
+  </select>
 
-    <input
-      type="password"
-      id="confirmarSenha"
-      placeholder="Confirmar Senha"
-      style="display: none;"
-    />
+  <select id="secondaryLane" style="display:none">
+    <option value="">Lane Secundária</option>
+    <option>TOP</option>
+    <option>JUNGLE</option>
+    <option>MID</option>
+    <option>ADC</option>
+    <option>SUPPORT</option>
+  </select>
 
-    <button id="actionBtn" onclick="handleAuth()">Entrar</button>
+  <input type="password" id="senha" placeholder="Senha" />
+  <input type="password" id="confirmarSenha" placeholder="Confirmar Senha" style="display:none">
 
-    <div class="switch" onclick="toggleForm()" id="switchText">
-      Não tem conta? Cadastre-se.
-    </div>
+  <button onclick="handleAuth()" id="actionBtn">Entrar</button>
+
+  <div class="switch" onclick="toggleForm()" id="switchText">
+    Não tem conta? Cadastre-se.
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      setDoc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
-      authDomain: "login-cmim.firebaseapp.com",
-      projectId: "login-cmim",
-      storageBucket: "login-cmim.firebasestorage.app",
-      messagingSenderId: "1003784143194",
-      appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    let isRegister = false;
+let isRegister = false;
 
-    window.toggleForm = function () {
-      isRegister = !isRegister;
+window.toggleForm = () => {
+  isRegister = !isRegister;
+  document.getElementById("formTitle").innerText = isRegister ? "Cadastrar Conta" : "Login CMIM";
+  document.getElementById("actionBtn").innerText = isRegister ? "Cadastrar" : "Entrar";
+  document.getElementById("switchText").innerText = isRegister ? "Já tem conta? Faça login." : "Não tem conta? Cadastre-se.";
 
-      document.getElementById("formTitle").textContent =
-        isRegister ? "Cadastrar Conta" : "Login CMIM";
+  ["lolNick","jaInsalubre","mainLane","secondaryLane","confirmarSenha"]
+    .forEach(id => document.getElementById(id).style.display = isRegister ? "block" : "none");
 
-      document.getElementById("actionBtn").textContent =
-        isRegister ? "Cadastrar" : "Entrar";
+  document.getElementById("elo").style.display = "none";
+  document.getElementById("tierManual").style.display = "none";
+};
 
-      document.getElementById("switchText").textContent =
-        isRegister
-          ? "Já tem conta? Faça login."
-          : "Não tem conta? Cadastre-se.";
+window.toggleInsalubre = () => {
+  const v = jaInsalubre.value;
+  tierManual.style.display = v === "sim" ? "block" : "none";
+  elo.style.display = v === "nao" ? "block" : "none";
+};
 
-      ["lolNick", "elo", "mainLane", "secondaryLane", "confirmarSenha"]
-        .forEach(id => {
-          document.getElementById(id).style.display =
-            isRegister ? "block" : "none";
-        });
-    };
+function calcularTier(elo){
+  return {Desafiante:"S+", "Grão Mestre":"S", Mestre:"A", Diamante:"B", Esmeralda:"C", Platina:"D", Ouro:"E"}[elo] || "F";
+}
 
-    function calcularTier(elo) {
-      switch (elo) {
-        case "Desafiante": return "S+";
-        case "Grão Mestre": return "S";
-        case "Mestre": return "A";
-        case "Diamante": return "B";
-        case "Esmeralda": return "C";
-        case "Platina": return "D";
-        case "Ouro": return "E";
-        default: return "F";
-      }
-    }
+window.handleAuth = async () => {
+  const email=email.value.trim(), senhaVal=senha.value;
+  if(!email||!senhaVal)return alert("Preencha email e senha");
 
-    function tipoInsalubridade(tier) {
-      return ["S+", "S", "A"].includes(tier)
-        ? "Insalubrão"
-        : "Insalubrinho";
-    }
+  if(isRegister){
+    if(!lolNick.value||!jaInsalubre.value||!mainLane.value||!secondaryLane.value||senhaVal!==confirmarSenha.value)
+      return alert("Preencha tudo corretamente!");
 
-    window.handleAuth = async function () {
-      const email = document.getElementById("email").value.trim();
-      const senha = document.getElementById("senha").value;
-      const confirmarSenha = document.getElementById("confirmarSenha").value;
+    const cred = await createUserWithEmailAndPassword(auth,email,senhaVal);
+    const uid = cred.user.uid;
 
-      const lolNick = document.getElementById("lolNick").value.trim();
-      const elo = document.getElementById("elo").value;
-      const mainLane = document.getElementById("mainLane").value;
-      const secondaryLane = document.getElementById("secondaryLane").value;
+    const tier = jaInsalubre.value==="sim" ? tierManual.value : calcularTier(elo.value);
+    const tipo = ["S+","S","A"].includes(tier) ? "Insalubrão" : "Insalubrinho";
 
-      if (!email || !senha) {
-        alert("Preencha email e senha!");
-        return;
-      }
+    await setDoc(doc(db,"users",uid),{
+      email,lolNick:lolNick.value,elo:elo.value||null,tier,tipo,
+      mainLane:mainLane.value,secondaryLane:secondaryLane.value,role:"user",criadoEm:new Date()
+    });
 
-      if (isRegister) {
-        if (!lolNick || !elo || !mainLane || !secondaryLane || !confirmarSenha) {
-          alert("Preencha TODOS os campos do cadastro!");
-          return;
-        }
-
-        if (senha !== confirmarSenha) {
-          alert("As senhas não coincidem!");
-          return;
-        }
-      }
-
-      try {
-        if (isRegister) {
-          const cred = await createUserWithEmailAndPassword(auth, email, senha);
-          const uid = cred.user.uid;
-
-          const tier = calcularTier(elo);
-          const tipo = tipoInsalubridade(tier);
-
-          await setDoc(doc(db, "users", uid), {
-            email,
-            lolNick,
-            elo,
-            tier,
-            tipo,
-            mainLane,
-            secondaryLane,
-            role: "user",
-            criadoEm: new Date()
-          });
-
-          alert(
-            `✅ Conta criada com sucesso!\n\n` +
-            `🎮 Elo: ${elo}\n` +
-            `🏅 Tier: ${tier}\n` +
-            `🔥 Você é do ${tipo}`
-          );
-
-          await signOut(auth);
-          toggleForm();
-        } else {
-          const cred = await signInWithEmailAndPassword(auth, email, senha);
-          const uid = cred.user.uid;
-
-          const userDoc = await getDoc(doc(db, "users", uid));
-          if (!userDoc.exists()) {
-            alert("Usuário não encontrado!");
-            return;
-          }
-
-          const userData = userDoc.data();
-
-          if (userData.role === "admin") {
-            window.location.href = "ADMtabela.html";
-          } else {
-            window.location.href = "menu.html";
-          }
-        }
-      } catch (error) {
-        alert("Erro: " + error.message);
-      }
-    };
-  </script>
+    alert("Conta criada com sucesso!");
+    await signOut(auth);
+    toggleForm();
+  } else {
+    const cred = await signInWithEmailAndPassword(auth,email,senhaVal);
+    const snap = await getDoc(doc(db,"users",cred.user.uid));
+    location.href = snap.data().role==="admin"?"ADMtabela.html":"menu.html";
+  }
+};
+</script>
 </body>
 </html>
