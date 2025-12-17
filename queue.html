@@ -161,16 +161,35 @@ window.entrar=async(id)=>{
  await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
 };
 
-window.remover=async(id,uid)=>{
- const ref=doc(db,"queues",id);
- const snap=await getDoc(ref);
- const d=snap.data();
+window.remover = async (id, uid) => {
+  const ref = doc(db, "queues", id);
+  const snap = await getDoc(ref);
+  const d = snap.data();
 
- for(const l in d.lanes)
-  d.lanes[l]=d.lanes[l].filter(p=>p.uid!==uid);
+  let laneComVaga = null;
 
- d.overflow=d.overflow.filter(p=>p.uid!==uid);
- await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
+  // Remove das lanes e identifica onde abriu vaga
+  for (const l in d.lanes) {
+    const antes = d.lanes[l].length;
+    d.lanes[l] = d.lanes[l].filter(p => p.uid !== uid);
+    if (antes === 2 && d.lanes[l].length === 1) {
+      laneComVaga = l;
+    }
+  }
+
+  // Remove do overflow
+  d.overflow = d.overflow.filter(p => p.uid !== uid);
+
+  // 🦁 Leão sobe se existir vaga
+  if (laneComVaga && d.overflow.length > 0) {
+    const proximo = d.overflow.shift(); // tira o primeiro da fila
+    d.lanes[laneComVaga].push(proximo);
+  }
+
+  await updateDoc(ref, {
+    lanes: d.lanes,
+    overflow: d.overflow
+  });
 };
 
 window.salvar=async(id)=>{
@@ -195,4 +214,5 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
 
