@@ -30,6 +30,15 @@ body{min-height:100vh;background:#f4f6f8;display:flex;flex-direction:column}
 .form select,.form button{padding:10px;border-radius:8px;border:1px solid #d1d5db}
 .form button{background:#111;color:#fff;font-weight:600;cursor:pointer}
 footer{background:#111;color:#aaa;text-align:center;padding:12px;font-size:12px}
+
+  .queue-container::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url('cmim.png') center/contain no-repeat;
+  opacity:.05;
+  pointer-events: none; /* 🔥 ISSO RESOLVE */
+}
 </style>
 </head>
 
@@ -181,3 +190,4 @@ window.sairFila=async()=>{
 
 </body>
 </html>
+
