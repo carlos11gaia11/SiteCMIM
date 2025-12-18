@@ -154,9 +154,18 @@ window.entrar=async(id)=>{
 
  if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))return;
 
- const p={uid:currentUser.uid,nick:profile.lolNick};
- if(d.lanes[lane].length<2)d.lanes[lane].push(p);
- else d.overflow.push(p);
+ const p = {
+  uid: currentUser.uid,
+  nick: profile.lolNick,
+  lane: lane // 👈 MUITO IMPORTANTE
+};
+
+if (d.lanes[lane].length < 2) {
+  d.lanes[lane].push(p);
+} else {
+  d.overflow.push(p);
+}
+
 
  await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
 };
@@ -166,19 +175,28 @@ window.remover = async (id, uid) => {
   const snap = await getDoc(ref);
   const d = snap.data();
 
-  // 1️⃣ Remove o jogador de todas as lanes
+  let laneComVaga = null;
+
+  // 1️⃣ Remove jogador das lanes e identifica onde abriu vaga
   for (const l in d.lanes) {
+    const antes = d.lanes[l].length;
     d.lanes[l] = d.lanes[l].filter(p => p.uid !== uid);
+
+    if (antes === 2 && d.lanes[l].length === 1) {
+      laneComVaga = l;
+    }
   }
 
   // 2️⃣ Remove do overflow (caso esteja lá)
   d.overflow = d.overflow.filter(p => p.uid !== uid);
 
-  // 3️⃣ 🦁 Leão de vaga sobe automaticamente
-  for (const l in d.lanes) {
-    while (d.lanes[l].length < 2 && d.overflow.length > 0) {
-      const proximo = d.overflow.shift();
-      d.lanes[l].push(proximo);
+  // 3️⃣ 🦁 Sobe SOMENTE quem pediu essa lane
+  if (laneComVaga) {
+    const index = d.overflow.findIndex(p => p.lane === laneComVaga);
+
+    if (index !== -1) {
+      const [proximo] = d.overflow.splice(index, 1);
+      d.lanes[laneComVaga].push(proximo);
     }
   }
 
@@ -210,6 +228,7 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
 
 
 
