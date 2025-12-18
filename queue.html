@@ -157,7 +157,8 @@ window.entrar=async(id)=>{
  const p = {
   uid: currentUser.uid,
   nick: profile.lolNick,
-  lane: lane // 👈 MUITO IMPORTANTE
+  lane: lane,
+  joinedAt: Date.now() // ⏱️ ordem real da fila
 };
 
 if (d.lanes[lane].length < 2) {
@@ -228,6 +229,7 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
 
 
 
