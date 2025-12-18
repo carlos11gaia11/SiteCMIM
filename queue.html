@@ -166,24 +166,20 @@ window.remover = async (id, uid) => {
   const snap = await getDoc(ref);
   const d = snap.data();
 
-  let laneComVaga = null;
-
-  // Remove das lanes e identifica onde abriu vaga
+  // 1️⃣ Remove o jogador de todas as lanes
   for (const l in d.lanes) {
-    const antes = d.lanes[l].length;
     d.lanes[l] = d.lanes[l].filter(p => p.uid !== uid);
-    if (antes === 2 && d.lanes[l].length === 1) {
-      laneComVaga = l;
-    }
   }
 
-  // Remove do overflow
+  // 2️⃣ Remove do overflow (caso esteja lá)
   d.overflow = d.overflow.filter(p => p.uid !== uid);
 
-  // 🦁 Leão sobe se existir vaga
-  if (laneComVaga && d.overflow.length > 0) {
-    const proximo = d.overflow.shift(); // tira o primeiro da fila
-    d.lanes[laneComVaga].push(proximo);
+  // 3️⃣ 🦁 Leão de vaga sobe automaticamente
+  for (const l in d.lanes) {
+    while (d.lanes[l].length < 2 && d.overflow.length > 0) {
+      const proximo = d.overflow.shift();
+      d.lanes[l].push(proximo);
+    }
   }
 
   await updateDoc(ref, {
@@ -214,5 +210,6 @@ window.criarFila=async()=>{
 
 </body>
 </html>
+
 
 
