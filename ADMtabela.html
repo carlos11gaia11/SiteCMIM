@@ -28,6 +28,86 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
 #playersTable thead th {position: sticky;top:0;z-index:10;background:#0f1720;}
 #toggleEditBtn {padding:6px 10px;border-radius:8px;font-weight:700;background: linear-gradient(90deg,var(--accent),var(--accent2));color: #001112;border: none;cursor: pointer;}
 #toggleEditBtn.off {background: rgba(255,255,255,0.03); color: var(--muted);}
+
+/* 🔥 MODAL / POPUP */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 9999;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-card {
+  background: linear-gradient(180deg, #0f1720, #09121a);
+  border-radius: 14px;
+  padding: 20px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  transform: scale(0.9) translateY(10px);
+  transition: all 0.25s ease;
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-card h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.modal-card p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  flex: 1;
+  background: linear-gradient(90deg,var(--accent),var(--accent2));
+  color: #001112;
+  font-weight: 800;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#searchPlayer {
+  color: #ffffff; /* texto digitado */
+}
+
+#searchPlayer::placeholder {
+  color: rgba(255, 255, 255, 0.6); /* placeholder */
+}
+
 </style>
 </head>
 <body>
@@ -58,7 +138,12 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
       <thead>
         <tr>
           <th>#</th><th>Jogador</th><th>Pontos</th><th>Jogos</th><th>Vitórias</th><th>Derrotas</th><th>MD3 Win</th>
-          <th>Final Torneio</th><th>Win Torneio</th><th>Winrate%</th><th>MVP</th><th>Bagre</th><th>Penalidades</th>
+          <th>Torneio 4º</th>
+<th>Torneio 3º</th>
+<th>Torneio 2º</th>
+<th>Torneio 1º</th>
+<th>Winrate%</th>
+<th>MVP</th><th>Bagre</th><th>Penalidades</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -120,7 +205,7 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
   </div>
 
   <div style="display:flex;gap:8px;margin-top:12px">
-    <button onclick="addMatch()">Adicionar Resultado</button>
+    <button onclick="abrirPopupResultado()">Adicionar Resultado</button>
     <button class="btn-ghost" onclick="document.getElementById('matchDate').value='';clearMatchInputs()">Limpar</button>
   </div>
 
@@ -148,7 +233,7 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
 
 <footer style="margin-top:18px;color:var(--muted);font-size:13px;text-align:center">
 Como são contados os pontos?<br>
-Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Final (vice) +1.5 • Win torneio +3 • MVP +2 • Bagre -3
+Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Torneio 4º -5 • Torneio 3º +5 • Torneio 2º +10 • Torneio 1º +15 • MVP +2 • Bagre -3
 </footer>
 </div>
 
@@ -156,7 +241,20 @@ Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Final (vice
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const RULES = { eachGame:0.5,victory:2,defeat:-2.5,md3win:1.5,finalVice:1.5,winTorneio:3,mvp:2,bagrePenalty:-3 };
+const RULES = { 
+  eachGame:0.5,
+  victory:2,
+  defeat:-2.5,
+  md3win:1.5,
+
+  torneio4:-5,
+  torneio3:5,
+  torneio2:10,
+  torneio1:15,
+
+  mvp:2,
+  bagrePenalty:-3
+};
 
 // 🔵 Inicializar Firebase
 const firebaseConfig = {
@@ -201,7 +299,10 @@ function uiAddPlayer(){
   if(!name) return alert('Digite um nome de jogador.');
   if(findPlayer(name)) return alert('Jogador já cadastrado.');
 
-  state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,finalT:0,winT:0,mvpCount:0,bagreCount:0,penalidades:0});
+  state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,t4:0,
+t3:0,
+t2:0,
+t1:0,mvpCount:0,bagreCount:0,penalidades:0});
   input.value=''; saveState(); renderPlayers();
 }
 
@@ -215,8 +316,10 @@ function recalcPlayer(p){
   const vitorias=Number(p.vitorias)||0;
   const derrotas=Number(p.derrotas)||0;
   const md3=Number(p.md3win)||0;
-  const finalT=Number(p.finalT)||0;
-  const winT=Number(p.winT)||0;
+const t4 = Number(p.t4) || 0;
+const t3 = Number(p.t3) || 0;
+const t2 = Number(p.t2) || 0;
+const t1 = Number(p.t1) || 0;
   const mvp=Number(p.mvpCount)||0;
   const bagre=Number(p.bagreCount)||0;
   const penal=Number(p.penalidades)||0;
@@ -226,8 +329,10 @@ function recalcPlayer(p){
   pts += vitorias*RULES.victory;
   pts += derrotas*RULES.defeat;
   pts += md3*RULES.md3win;
-  pts += finalT*RULES.finalVice;
-  pts += winT*RULES.winTorneio;
+pts += t4 * RULES.torneio4;
+pts += t3 * RULES.torneio3;
+pts += t2 * RULES.torneio2;
+pts += t1 * RULES.torneio1;
   pts += mvp*RULES.mvp;
   pts += bagre*RULES.bagrePenalty;
   pts -= penal;
@@ -276,8 +381,17 @@ function renderPlayers(){
       <td><input type="number" value="${p.vitorias}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'vitorias','${escapeJs(p.name)}')"></td>
       <td><input type="number" value="${p.derrotas}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'derrotas','${escapeJs(p.name)}')"></td>
       <td><input type="number" value="${p.md3win}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'md3win','${escapeJs(p.name)}')"></td>
-      <td><input type="number" value="${p.finalT}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'finalT','${escapeJs(p.name)}')"></td>
-      <td><input type="number" value="${p.winT}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'winT','${escapeJs(p.name)}')"></td>
+<td><input type="number" value="${p.t4}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t4','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t3}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t3','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t2}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t2','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t1}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t1','${escapeJs(p.name)}')"></td>
       <td class="muted-cell">${(p.jogos>0?((p.vitorias/p.jogos)*100).toFixed(1):'0.0')}%</td>
       <td><input type="number" value="${p.mvpCount}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'mvpCount','${escapeJs(p.name)}')"></td>
       <td><input type="number" value="${p.bagreCount}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'bagreCount','${escapeJs(p.name)}')"></td>
@@ -302,10 +416,14 @@ function addMatch(){
   const bagre=document.getElementById('bagreInput').value.trim();
 
   if(t1.some(p=>!p)||t2.some(p=>!p)) return alert('Todos os jogadores devem ser preenchidos.');
-  const winner = ['2-0','2-1','1-0'].includes(md3)? 'Time 1':'Time 2';
+  const isMD3 = ['2-0','2-1','0-2','1-2'].includes(md3);
+const winner = ['2-0','2-1','1-0'].includes(md3) ? 'Time 1' : 'Time 2';
 
   state.history.push({date,t1,t2,md3, winner, mvp, bagre});
-  [t1,t2].flat().forEach(name=>{ let p=findPlayer(name); if(!p) state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,finalT:0,winT:0,mvpCount:0,bagreCount:0,penalidades:0}); });
+  [t1,t2].flat().forEach(name=>{ let p=findPlayer(name); if(!p) state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,t4:0,
+t3:0,
+t2:0,
+t1:0,mvpCount:0,bagreCount:0,penalidades:0}); });
   
   // Atualizar stats
   const pointsMap = { 'Time 1': t1, 'Time 2': t2 };
@@ -313,7 +431,14 @@ function addMatch(){
     pointsMap[team].forEach(n=>{
       const p=findPlayer(n); if(!p) return;
       p.jogos=(Number(p.vitorias)||0)+(Number(p.derrotas)||0)+1;
-      if(winner===team){ p.vitorias=(Number(p.vitorias)||0)+1; p.md3win=(Number(p.md3win)||0)+1; }
+      if(winner===team){
+  p.vitorias = (Number(p.vitorias)||0) + 1;
+
+  // só soma MD3 se realmente foi MD3
+  if(isMD3){
+    p.md3win = (Number(p.md3win)||0) + 1;
+  }
+}
       else p.derrotas=(Number(p.derrotas)||0)+1;
       if(mvp && n===mvp) p.mvpCount=(Number(p.mvpCount)||0)+1;
       if(bagre && n===bagre) p.bagreCount=(Number(p.bagreCount)||0)+1;
@@ -360,6 +485,61 @@ function escapeJs(text){ return text.replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 
 // 🔵 Inicializar
 (async()=>{ await loadState(); renderPlayers(); renderHistory(); toggleEditMode(); })();
+
+
+let pendingMatch = false;
+
+function abrirPopupResultado() {
+  document.getElementById("resultModal").classList.add("active");
+}
+
+function fecharPopupResultado() {
+  document.getElementById("resultModal").classList.remove("active");
+}
+
+function confirmarResultado() {
+  fecharPopupResultado();
+  addMatch(); // chama sua função original
+  mostrarSucesso();
+}
+
+function mostrarSucesso() {
+  const msg = document.createElement("div");
+  msg.textContent = "✅ Resultado adicionado com sucesso!";
+  msg.style.position = "fixed";
+  msg.style.bottom = "20px";
+  msg.style.right = "20px";
+  msg.style.background = "linear-gradient(90deg,var(--accent),var(--accent2))";
+  msg.style.color = "#001112";
+  msg.style.padding = "12px 16px";
+  msg.style.borderRadius = "10px";
+  msg.style.fontWeight = "800";
+  msg.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
+  msg.style.zIndex = "9999";
+  msg.style.opacity = "0";
+  msg.style.transition = "opacity 0.3s ease";
+
+  document.body.appendChild(msg);
+
+  requestAnimationFrame(() => msg.style.opacity = "1");
+  setTimeout(() => {
+    msg.style.opacity = "0";
+    setTimeout(() => msg.remove(), 300);
+  }, 2500);
+}
 </script>
+
+<!-- 🔥 POPUP CONFIRMAÇÃO DE RESULTADO -->
+<div id="resultModal" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Confirmar Resultado</h3>
+    <p>Tem certeza que deseja adicionar este resultado?</p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharPopupResultado()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarResultado()">Confirmar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
