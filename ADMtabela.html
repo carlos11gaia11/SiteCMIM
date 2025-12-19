@@ -411,9 +411,14 @@ function clearMatchInputs(){
 function addMatch(){
   const t1=[],t2=[]; for(let i=0;i<5;i++){ t1.push(document.getElementById(`t1p${i}`).value.trim()); t2.push(document.getElementById(`t2p${i}`).value.trim()); }
   const md3=document.getElementById('md3score').value;
-  let winsT1 = 0;
+ let winsT1 = 0;
 let winsT2 = 0;
 
+// BO1
+if(md3 === "1-0"){ winsT1 = 1; winsT2 = 0; }
+if(md3 === "0-1"){ winsT1 = 0; winsT2 = 1; }
+
+// MD3
 if(md3 === "2-0"){ winsT1 = 2; winsT2 = 0; }
 if(md3 === "2-1"){ winsT1 = 2; winsT2 = 1; }
 if(md3 === "0-2"){ winsT1 = 0; winsT2 = 2; }
