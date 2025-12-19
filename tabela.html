@@ -1,685 +1,210 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CMIM - Tabela de Pontuação Insalubrinho</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMIM • Tabela de Pontuação</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --bg:#0b0f14;
-    --card:#0f1720;
-    --accent:#00e5a8;
-    --accent2:#7c5cff;
-    --muted:#9aa7b2;
-    --danger:#ff4d6d;
-    --panel:#071018;
-  }
-  *{box-sizing:border-box;font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
-  body{margin:0;background:linear-gradient(180deg,#051018 0%, #08121a 100%);color:#e6f0f3;padding:20px;min-height:100vh;}
-  .wrap{
-  max-width:none; /* ocupa a tela inteira */
-  margin:0;       /* sem centralização */
+:root{
+  --bg:#0b0f14;
+  --card:#0f1720;
+  --accent:#00e5a8;
+  --accent2:#7c5cff;
+  --muted:#9aa7b2;
+}
+*{box-sizing:border-box;font-family:Montserrat,system-ui}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#051018,#08121a);
+  color:#e6f0f3;
+  padding:20px;
+}
+.wrap{max-width:1200px;margin:auto}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.05);
+}
+h1{
+  margin:0 0 12px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:.6px;
+}
+table{
   width:100%;
+  border-collapse:collapse;
+  font-size:13px;
 }
-  header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
-  header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:0.6px}
-  .top-row{display:grid;grid-template-columns:1fr 420px;gap:16px;margin-bottom:16px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
-  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:center}
-  th{font-size:12px;color:var(--muted);font-weight:600}
-  tbody tr:hover{background:rgba(124,92,255,0.03)}
-  .puntos{font-weight:800;color:var(--accent)}
-  .muted-cell{color:var(--muted)}
-
-  /* Inputs desabilitados */
-  #playersTable input:disabled {
-    background: none !important;
-    border: none !important;
-    outline: none !important;
-    color: #fff;
-    font-weight: 700;
-    cursor: not-allowed !important;
-    padding: 0;
-    text-align: center;
-  }
-
-  /* Cabeçalho fixo */
-  #playersTable thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: #0f1720;
-  }
-
-  /* Botão toggle */
-  #toggleEditBtn {
-    padding:6px 10px;
-    border-radius:8px;
-    font-weight:700;
-    background: linear-gradient(90deg,var(--accent),var(--accent2));
-    color: #001112;
-    border: none;
-    cursor: pointer;
-  }
-  #toggleEditBtn.off {
-    background: rgba(255,255,255,0.03);
-    color: var(--muted);
-  }
-
-/* 🔢 Colunas numéricas bem estreitas */
-.num-col {
-  width: 1%;
-  white-space: nowrap;
-  padding: 4px 6px;
+th,td{
+  padding:8px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:center;
 }
-
-/* Inputs numéricos compactos */
-#playersTable input[type="number"] {
-  width: 48px;        /* largura fixa enxuta */
-  min-width: 40px;
-  padding: 2px 4px;
-  text-align: center;
-  font-size: 12px;
+th{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
 }
-
-/* Remove setas do input number (Chrome/Edge) */
-#playersTable input[type="number"]::-webkit-outer-spin-button,
-#playersTable input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+tbody tr:hover{
+  background:rgba(124,92,255,.04);
 }
-
-/* Firefox */
-#playersTable input[type="number"] {
-  -moz-appearance: textfield;
+.pontos{
+  color:var(--accent);
+  font-weight:800;
 }
-#playersTable td:nth-child(2),
-#playersTable th:nth-child(2) {
-  min-width: 220px;
-  text-align: left;
+.search{
+  margin-bottom:10px;
+}
+.search input{
+  width:220px;
+  padding:8px;
+  border-radius:8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.08);
+  color:#fff;
+}
+footer{
+  margin-top:16px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
 }
 </style>
 </head>
+
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>CMIM - Tabela de Pontuação Insalubrinho</h1>
-      <div class="small">Painel de jogadores</div>
+  <div class="card">
+    <h1>CMIM • Tabela de Pontuação</h1>
+
+    <div class="search">
+      <input id="searchPlayer" placeholder="Pesquisar jogador..." oninput="renderPlayers()">
     </div>
-  </header>
 
-  <div class="top-row">
-    <!-- Left card -->
-    <div class="card" id="playersCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div><strong>Lista de Jogadores</strong> <span class="pill" id="totalPlayers">0</span></div>
-        <div class="controls">
-          
-          <input id="searchPlayer" placeholder="Pesquisar..." onkeyup="renderPlayers()" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);width:180px">
-          <button onclick="exportJSON()">Export JSON</button>
-          <button onclick="document.getElementById('importFile').click()">Import JSON</button>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-        </div>
-      </div>
-
-      <div style="overflow:auto;max-height:700px">
-        <table id="playersTable">
-          <thead>
-            <tr>
-<th>#</th>
-  <th>Jogador</th>
+    <table id="playersTable">
+      <thead>
+<tr>
+  <th>#</th>
+  <th style="text-align:left">Jogador</th>
   <th>Pontos</th>
+
   <th>Jogos</th>
-  <th>Vitórias</th>
-  <th>Derrotas</th>
-  <th>MD3 Win</th>
+  <th>Vit</th>
+  <th>Der</th>
+  <th>MD3</th>
 
-  <th>Torneio 4º</th>
-  <th>Torneio 3º</th>
-  <th>Torneio 2º</th>
-  <th>Torneio 1º</th>
+  <th>T1º</th>
+  <th>T2º</th>
+  <th>T3º</th>
+  <th>T4º</th>
 
-  <th>Winrate%</th>
+  <th>Winrate</th>
   <th>MVP</th>
   <th>Bagre</th>
-  <th>Penalidades</th>
-  </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+<th>Penalalidades</th>
 
-      <div id="playerAddPanel" style="display:flex;gap:8px;margin-top:10px;align-items:center">
-        <input id="newPlayerName" placeholder="Nome do jogador">
-        <button onclick="uiAddPlayer()">Adicionar Jogador</button>
-        <button class="btn-ghost" onclick="clearAll()">Resetar</button>
-      </div>
-    </div>
-  <!-- Right: Match Panel -->
-    <div class="card" id="matchRegisterCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div><strong>Registrar Partida (MD3 • 5x5)</strong></div>
-        <div class="small">Formato: 2x0 ou 2x1</div>
-      </div>
-
-      <label>Time 1 (5 jogadores)</label>
-      <div class="team-input" id="team1" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-        <input id="t1p0" placeholder="Player 1">
-        <input id="t1p1" placeholder="Player 2">
-        <input id="t1p2" placeholder="Player 3">
-        <input id="t1p3" placeholder="Player 4">
-        <input id="t1p4" placeholder="Player 5">
-      </div>
-
-      <label style="margin-top:8px">Time 2 (5 jogadores)</label>
-      <div class="team-input" id="team2" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-        <input id="t2p0" placeholder="Player 1">
-        <input id="t2p1" placeholder="Player 2">
-        <input id="t2p2" placeholder="Player 3">
-        <input id="t2p3" placeholder="Player 4">
-        <input id="t2p4" placeholder="Player 5">
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-        <label>Placar MD3</label>
-        <select id="md3score">
-          <option value="1-0">1x0 - Time 1</option> 
-          <option value="0-1">0x1 - Time 2</option> 
-          <option value="2-0">2x0 - Time 1</option>
-          <option value="2-1">2x1 - Time 1</option>
-          <option value="0-2">0x2 - Time 2</option>
-          <option value="1-2">1x2 - Time 2</option>
-        </select>
-
-        <label>Data</label>
-        <input type="date" id="matchDate" style="padding:6px;border-radius:8px">
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-        <label style="width:60px">MVP</label>
-        <input id="mvpInput" placeholder="Nome do MVP">
-        <label style="width:60px">Bagre</label>
-        <input id="bagreInput" placeholder="Nome do Bagre">
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button onclick="addMatch()">Adicionar Resultado</button>
-        <button class="btn-ghost" onclick="document.getElementById('matchDate').value='';clearMatchInputs()">Limpar</button>
-      </div>
-
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
-
-      <div>
-        <strong>Histórico de Partidas</strong>
-        <div class="filter" style="margin-top:6px;display:flex;gap:8px">
-          <input id="historyFilter" placeholder="Filtrar por jogador / time" oninput="renderHistory()" style="padding:6px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);width:220px">
-          <button class="btn-ghost" onclick="document.getElementById('historyFilter').value='';renderHistory()">Limpar</button>
-        </div>
-
-        <div class="history card" id="historyCard" style="padding:8px;max-height:320px;overflow:auto">
-          <table id="historyTable" style="width:100%">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Time 1</th>
-                <th>Time 2</th>
-                <th>Placar</th>
-                <th>Vencedor</th>
-                <th>MVP</th>
-                <th>Bagre</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-      </div>
-    </div>
+</tr>
+</thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <footer style="margin-top:18px;color:var(--muted);font-size:13px;text-align:center">
-    Como são contados os pontos?<br>
-    Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 •
-   4º lugar -5 • 3º lugar +5 • 2º lugar +10 • 1º lugar +15 •
-   MVP +2 • Bagre -3
+  <footer>
+    Dados atualizados em tempo real • CMIM
   </footer>
 </div>
 
-<script>
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-const RULES = {
-  eachGame: 0.5,
-  victory: 2,
-  defeat: -2.5,
-  md3win: 1.5,
-  t4: -5,
-  t3: 5,
-  t2: 10,
-  t1: 15,
-  mvp: 2,
-  bagrePenalty: -3
+<script>
+// 🔵 CONFIG FIREBASE (MESMO DO ADMIN)
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim",
+  storageBucket: "login-cmim.firebasestorage.app",
+  messagingSenderId: "1003784143194",
+  appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
 };
 
-let state = { players: [], history: [] };
-
-function saveState(){ localStorage.setItem('cmim_state_v1', JSON.stringify(state)); }
-function loadState(){ const raw = localStorage.getItem('cmim_state_v1'); if(raw) state = JSON.parse(raw); }
-loadState();
-normalizePlayers();
-
-function normalizePlayers(){
-  state.players.forEach(p => {
-
-    // campos de torneio
-    p.t4 = Number(p.t4) || 0;
-    p.t3 = Number(p.t3) || 0;
-    p.t2 = Number(p.t2) || 0;
-    p.t1 = Number(p.t1) || 0;
-
-    // estatísticas
-    p.mvpCount    = Number(p.mvpCount) || 0;
-    p.bagreCount  = Number(p.bagreCount) || 0;
-    p.penalidades = Number(p.penalidades) || 0;
-
-    // base
-    p.md3win   = Number(p.md3win) || 0;
-    p.vitorias = Number(p.vitorias) || 0;
-    p.derrotas = Number(p.derrotas) || 0;
-    p.jogos    = p.vitorias + p.derrotas;
-
-    // pontos sempre recalculados do zero
-    p.pontos = 0;
-  });
-}
-
-function findPlayer(name){
-  if(!name) return null;
-  const n = name.trim();
-  return state.players.find(p => p.name.toLowerCase() === n.toLowerCase()) || null;
-}
-function uiAddPlayer(){
-  const input = document.getElementById('newPlayerName');
-  const name = input.value.trim();
-  if(!name) return alert('Digite um nome de jogador.');
-  if(findPlayer(name)) return alert('Jogador já cadastrado.');
-
-  state.players.push({
-    name,
-    pontos: 0, jogos:0, vitorias:0, derrotas:0, md3win:0,
-    t4: 0,
-t3: 0,
-t2: 0,
-t1: 0, mvpCount:0, bagreCount:0, penalidades:0
-  });
-
-  input.value = '';
-  saveState();
-  renderPlayers();
-}
-
-function clearAll(){
-  if(!confirm('Tem certeza? Isso irá limpar TODOS os dados salvos.')) return;
-  localStorage.removeItem('cmim_state_v1');
-  state = {players:[], history:[]};
-  // inicializar
-renderPlayers();
-renderHistory();
-
-// Bloqueia inputs de edição ao carregar
-document.querySelectorAll("#playersTable input").forEach(i => i.disabled = true);
-document.getElementById("playerAddPanel").style.display = "none";
-document.getElementById("matchRegisterCard").style.display = "none";
-  
-}
-
-function recalcPlayer(p){
-  const jogos     = Number(p.jogos) || 0;
-  const vitorias  = Number(p.vitorias) || 0;
-  const derrotas  = Number(p.derrotas) || 0;
-  const md3       = Number(p.md3win) || 0;
-
-  const t4 = Number(p.t4) || 0;
-  const t3 = Number(p.t3) || 0;
-  const t2 = Number(p.t2) || 0;
-  const t1 = Number(p.t1) || 0;
-
-  const mvp    = Number(p.mvpCount) || 0;
-  const bagre  = Number(p.bagreCount) || 0;
-  const penal  = Number(p.penalidades) || 0;
-
-  let pts = 0;
-  pts += jogos    * RULES.eachGame;
-  pts += vitorias * RULES.victory;
-  pts += derrotas * RULES.defeat;
-  pts += md3      * RULES.md3win;
-
-  pts += t4 * RULES.t4;
-  pts += t3 * RULES.t3;
-  pts += t2 * RULES.t2;
-  pts += t1 * RULES.t1;
-
-  pts += mvp   * RULES.mvp;
-  pts += bagre * RULES.bagrePenalty;
-  pts -= penal;
-
-  p.pontos = Number(pts.toFixed(2));
-}
-
-let editMode = false;
-
-/* 🔵 NOVA FUNÇÃO: NÃO recalcula durante edição */
-function onPlayerFieldEdit(elem, field, name){
-  const p = findPlayer(name);
-  if (!p) return;
-
-  p[field] = Number(elem.value) || 0;
-
-  if (field === 'vitorias' || field === 'derrotas') {
-    p.jogos = (Number(p.vitorias)||0) + (Number(p.derrotas)||0);
-  }
-
-  saveState();
-}
-
-/* 🔵 Só recalcula QUANDO DESLIGAR modo edição */
-function toggleEditMode() {
-  editMode = !editMode;
-
-  const btn = document.getElementById("toggleEditBtn");
-  btn.textContent = editMode ? "Modo Edição: ON" : "Modo Edição: OFF";
-  btn.classList.toggle("off", !editMode);
-
-  const inputs = document.querySelectorAll("#playersTable input");
-  inputs.forEach(i => i.disabled = !editMode);
-
-  // 🔵 Ocultar Registro de Partida
-  document.getElementById("matchRegisterCard").style.display = editMode ? "block" : "none";
-
-  // 🔵 Ocultar Adicionar Jogador e Resetar
-  document.getElementById("playerAddPanel").style.display = editMode ? "flex" : "none";
-
-  if (!editMode) {
-    state.players.forEach(p => {
-      p.jogos = (Number(p.vitorias)||0) + (Number(p.derrotas)||0);
-      recalcPlayer(p);
-    });
-    renderPlayers();
-    saveState();
-  }
-}
-
-function renderPlayers(){
-  const tbody = document.querySelector('#playersTable tbody');
-  tbody.innerHTML = '';
-
-  const q = (document.getElementById('searchPlayer').value || '').toLowerCase();
-
-  const list = state.players
-    .filter(p => p.name.toLowerCase().includes(q))
-    .sort((a,b)=> b.pontos - a.pontos);
-
-  document.getElementById('totalPlayers').innerText = list.length;
-
-  for(let i=0; i<list.length; i++){
-    const p = list[i];
-
-
-    const pos = i + 1;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-<td><strong>${pos}</strong></td>
-
-<td style="text-align:left">${escapeHtml(p.name)}</td>
-
-<td class="num-col">${p.pontos.toFixed(2)}</td>
-<td class="num-col">${p.jogos}</td>
-
-<td><input type="number" value="${p.vitorias}" min="0"
-onchange="onPlayerFieldEdit(this,'vitorias','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.derrotas}" min="0"
-onchange="onPlayerFieldEdit(this,'derrotas','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.md3win}" min="0"
-onchange="onPlayerFieldEdit(this,'md3win','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.t4}" min="0"
-onchange="onPlayerFieldEdit(this,'t4','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.t3}" min="0"
-onchange="onPlayerFieldEdit(this,'t3','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.t2}" min="0"
-onchange="onPlayerFieldEdit(this,'t2','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.t1}" min="0"
-onchange="onPlayerFieldEdit(this,'t1','${escapeJs(p.name)}')"></td>
-
-<td>
-${p.jogos > 0 ? ((p.vitorias / p.jogos) * 100).toFixed(1) : "0.0"}%
-</td>
-
-<td><input type="number" value="${p.mvpCount}" min="0"
-onchange="onPlayerFieldEdit(this,'mvpCount','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.bagreCount}" min="0"
-onchange="onPlayerFieldEdit(this,'bagreCount','${escapeJs(p.name)}')"></td>
-
-<td><input type="number" value="${p.penalidades}" min="0"
-onchange="onPlayerFieldEdit(this,'penalidades','${escapeJs(p.name)}')"></td>
-
-
-`;
-
-    tbody.appendChild(tr);
-  }
-
-  // mantém inputs no estado certo
-  const inputs = document.querySelectorAll("#playersTable input");
-  inputs.forEach(i => i.disabled = !editMode);
-
-  saveState();
-}
-function clearMatchInputs(){
-  ['t1p0','t1p1','t1p2','t1p3','t1p4','t2p0','t2p1','t2p2','t2p3','t2p4','mvpInput','bagreInput']
-    .forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) el.value = '';
-    });
-  document.getElementById('md3score').value = '2-0';
-}
-
-function addMatch(){
-  const t1 = [];
-  const t2 = [];
-
-  for(let i=0;i<5;i++){
-    const p1 = document.getElementById(`t1p${i}`).value.trim();
-    const p2 = document.getElementById(`t2p${i}`).value.trim();
-    if(p1) t1.push(p1);
-    if(p2) t2.push(p2);
-  }
-
-  if(t1.length!==5 || t2.length!==5)
-    return alert("Preencha os 5 jogadores de cada time.");
-
-  const all = [...t1,...t2].map(s=>s.toLowerCase());
-  const dup = all.find((v,i)=> all.indexOf(v)!==i);
-  if(dup) return alert("Jogador duplicado na partida: " + dup);
-
-  const score = document.getElementById('md3score').value;
-  const [s1,s2] = score.split('-').map(Number);
-  const winnerTeam = s1 > s2 ? 1 : 2;
-
-  const dateInput = document.getElementById('matchDate').value;
-  const date = dateInput ? new Date(dateInput) : new Date();
-  const dateStr = date.toLocaleDateString('pt-BR');
-
-  const mvpName = document.getElementById('mvpInput').value.trim();
-  const bagreName = document.getElementById('bagreInput').value.trim();
-
-  if(!mvpName || !bagreName)
-    return alert("MVP e Bagre são obrigatórios.");
-
-  // garantir jogadores cadastrados
-  for(const nm of [...t1,...t2,mvpName,bagreName]){
-    if(!findPlayer(nm)){
-      const add = confirm(`Jogador "${nm}" não existe. Deseja adicioná-lo?`);
-      if(add){
-        state.players.push({
-          name: nm,
-          pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,
-          finalT:0,winT:0,mvpCount:0,bagreCount:0,penalidades:0
-        });
-      } else {
-        return alert("Não é possível registrar a partida.");
-      }
-    }
-  }
-
-  // atualizar vitórias/derrotas por jogos do MD3
-  for(const nm of t1){
-    const p = findPlayer(nm);
-    p.vitorias += s1;
-    p.derrotas += s2;
-  }
-  for(const nm of t2){
-    const p = findPlayer(nm);
-    p.vitorias += s2;
-    p.derrotas += s1;
-  }
-
-  // MD3 win
-  // MD3 win SOMENTE se o vencedor fez 2 pontos
-if (s1 === 2 || s2 === 2) {
-  const winnerPlayers = winnerTeam === 1 ? t1 : t2;
-  for (const nm of winnerPlayers) {
-    const p = findPlayer(nm);
-    p.md3win++;
-  }
-}
-
-  // MVP e Bagre
-  findPlayer(mvpName).mvpCount++;
-  findPlayer(bagreName).bagreCount++;
-
-  // recalc
-  const affected = new Set([...t1,...t2,mvpName,bagreName]);
-  affected.forEach(nm=>{
-    const p = findPlayer(nm);
-    p.jogos = p.vitorias + p.derrotas;
-    recalcPlayer(p);
-  });
-
-  // salvar histórico
-  state.history.unshift({
-    date: dateStr,
-    team1: t1.slice(),
-    team2: t2.slice(),
-    score: `${s1}x${s2}`,
-    winner: winnerTeam===1 ? 'Time 1' : 'Time 2',
-    mvp: mvpName,
-    bagre: bagreName
-  });
-
-  saveState();
-  renderPlayers();
-  renderHistory();
-  clearMatchInputs();
-
-  alert("Resultado registrado com sucesso!");
-}
-
-function renderHistory(){
-  const tbody = document.querySelector('#historyTable tbody');
-  tbody.innerHTML = '';
-
-  const q = (document.getElementById('historyFilter').value || '').toLowerCase();
-
-  const list = state.history.filter(e=>{
-    if(!q) return true;
-    return (
-      e.date.toLowerCase().includes(q) ||
-      e.team1.join(" ").toLowerCase().includes(q) ||
-      e.team2.join(" ").toLowerCase().includes(q) ||
-      e.mvp.toLowerCase().includes(q) ||
-      e.bagre.toLowerCase().includes(q)
-    );
-  });
-
-  for(const e of list){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${e.date}</td>
-      <td>${e.team1.join(', ')}</td>
-      <td>${e.team2.join(', ')}</td>
-      <td>${e.score}</td>
-      <td>${e.winner}</td>
-      <td>${e.mvp}</td>
-      <td>${e.bagre}</td>
-    `;
-    tbody.appendChild(tr);
-  }
-}
-
-function filterHistoryBy(text){
-  document.getElementById('historyFilter').value = text;
-  renderHistory();
-}
-
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "cmim_dados.json";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importJSON(event){
-  const file = event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e=>{
-    try{
-      const data = JSON.parse(e.target.result);
-      if(!data.players) throw new Error("Formato inválido");
-
-      state = data;
-      saveState();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 🔵 STATE (SOMENTE LEITURA)
+let state = {
+  players: [],
+  history: []
+};
+
+// 🔥 LISTENER EM TEMPO REAL
+function listenFirebase(){
+  db.collection("cmim").doc("state")
+    .onSnapshot(doc=>{
+      if(!doc.exists) return;
+      state = doc.data();
       renderPlayers();
-      renderHistory();
-      alert("Dados importados com sucesso!");
-
-    } catch(err){
-      alert("Erro: "+err.message);
-    }
-  };
-  reader.readAsText(file);
+    });
 }
 
-function escapeHtml(s){
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-function escapeJs(s){
-  return String(s).replace(/'/g,"\\'").replace(/"/g,'\\"');
+// 🔵 RENDERIZA TABELA
+function renderPlayers(){
+  const tbody = document.querySelector("#playersTable tbody");
+  tbody.innerHTML = "";
+
+  const q = document.getElementById("searchPlayer").value.toLowerCase();
+
+  const list = (state.players || [])
+    .filter(p => p.name.toLowerCase().includes(q))
+    .sort((a,b)=>b.pontos - a.pontos);
+
+  list.forEach((p,i)=>{
+    const jogos = (p.vitorias||0)+(p.derrotas||0);
+    const winrate = jogos>0 ? ((p.vitorias/jogos)*100).toFixed(1) : "0.0";
+
+    const tr = document.createElement("tr");
+tr.innerHTML = `
+  <td><strong>${i+1}</strong></td>
+  <td style="text-align:left">${escapeHtml(p.name)}</td>
+
+  <td class="pontos">${(p.pontos||0).toFixed(2)}</td>
+
+  <td>${jogos}</td>
+  <td>${p.vitorias||0}</td>
+  <td>${p.derrotas||0}</td>
+  <td>${p.md3win||0}</td>
+
+  <td>${p.t1 || 0}</td>
+  <td>${p.t2 || 0}</td>
+  <td>${p.t3 || 0}</td>
+  <td>${p.t4 || 0}</td>
+
+
+  <td>${winrate}%</td>
+  <td>${p.mvpCount||0}</td>
+  <td>${p.bagreCount||0}</td>
+<td>${p.penalidades || 0}</td>
+`;
+    tbody.appendChild(tr);
+  });
 }
 
-// inicializar
-renderPlayers();
-renderHistory();
+// 🔵 SEGURANÇA BÁSICA
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
 
+// 🚀 START
+listenFirebase();
 </script>
 </body>
 </html>
-
-
-
-
