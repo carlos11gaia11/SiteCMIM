@@ -541,5 +541,35 @@ function mostrarSucesso() {
     </div>
   </div>
 </div>
+  <!-- conteúdo da página ADM -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists() || snap.data().role !== "admin") {
+    window.location.href = "index.html";
+  }
+});
+</script>
 </body>
 </html>
