@@ -74,6 +74,18 @@ footer{
   font-size:13px;
   color:var(--muted);
 }
+
+.table-container{
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+thead th{
+  position: sticky;
+  top: 0;
+  background: #0f1720;
+  z-index: 2;
+}
 </style>
 </head>
 
@@ -83,10 +95,12 @@ footer{
     <h1>CMIM • Tabela de Pontuação</h1>
 
     <div class="search">
-      <input id="searchPlayer" placeholder="Pesquisar jogador..." oninput="renderPlayers()">
+      <input id="searchPlayer" placeholder="Pesquisar jogador..." 
+       oninput="currentPage = 1; renderPlayers()">
     </div>
 
-    <table id="playersTable">
+    <div class="table-container">
+  <table id="playersTable">
       <thead>
 <tr>
   <th>#</th>
@@ -94,8 +108,8 @@ footer{
   <th>Pontos</th>
 
   <th>Jogos</th>
-  <th>Vit</th>
-  <th>Der</th>
+  <th>Vitória</th>
+  <th>Derrota</th>
   <th>MD3</th>
 
   <th>T1º</th>
@@ -106,12 +120,13 @@ footer{
   <th>Winrate</th>
   <th>MVP</th>
   <th>Bagre</th>
-<th>Penalalidades</th>
+<th>Penalidades</th>
 
 </tr>
 </thead>
       <tbody></tbody>
     </table>
+<div id="pagination" style="margin-top:12px; text-align:center;"></div>
   </div>
 
   <footer>
@@ -143,6 +158,9 @@ let state = {
   history: []
 };
 
+let currentPage = 1;
+const playersPerPage = 20;
+
 // 🔥 LISTENER EM TEMPO REAL
 function listenFirebase(){
   db.collection("cmim").doc("state")
@@ -156,21 +174,30 @@ function listenFirebase(){
 // 🔵 RENDERIZA TABELA
 function renderPlayers(){
   const tbody = document.querySelector("#playersTable tbody");
+  const pagination = document.getElementById("pagination");
+
   tbody.innerHTML = "";
+  pagination.innerHTML = "";
 
   const q = document.getElementById("searchPlayer").value.toLowerCase();
 
   const list = (state.players || [])
-    .filter(p => p.name.toLowerCase().includes(q))
-    .sort((a,b)=>b.pontos - a.pontos);
+  .filter(p => (p.name || "").toLowerCase().includes(q))
+  .sort((a,b)=>b.pontos - a.pontos);
 
-  list.forEach((p,i)=>{
+const totalPages = Math.ceil(list.length / playersPerPage);
+if(currentPage > totalPages) currentPage = 1;
+
+const start = (currentPage - 1) * playersPerPage;
+const pagePlayers = list.slice(start, start + playersPerPage);
+
+  pagePlayers.forEach((p,i)=>{
     const jogos = (p.vitorias||0)+(p.derrotas||0);
     const winrate = jogos>0 ? ((p.vitorias/jogos)*100).toFixed(1) : "0.0";
 
     const tr = document.createElement("tr");
 tr.innerHTML = `
-  <td><strong>${i+1}</strong></td>
+  <td><strong>${start + i + 1}</strong></td>
   <td style="text-align:left">${escapeHtml(p.name)}</td>
 
   <td class="pontos">${(p.pontos||0).toFixed(2)}</td>
@@ -193,6 +220,31 @@ tr.innerHTML = `
 `;
     tbody.appendChild(tr);
   });
+// 🔢 BOTÕES DE PAGINAÇÃO
+if(totalPages > 1){
+
+  if(currentPage > 1){
+    pagination.innerHTML += `
+      <button onclick="changePage(${currentPage - 1})"
+        style="margin:0 4px;padding:6px 10px;border-radius:6px">
+        ⬅️
+      </button>`;
+  }
+
+  pagination.innerHTML += `
+    <span style="margin:0 8px">
+      Página ${currentPage} de ${totalPages}
+    </span>
+  `;
+
+  if(currentPage < totalPages){
+    pagination.innerHTML += `
+      <button onclick="changePage(${currentPage + 1})"
+        style="margin:0 4px;padding:6px 10px;border-radius:6px">
+        ➡️
+      </button>`;
+  }
+}
 }
 
 // 🔵 SEGURANÇA BÁSICA
@@ -201,6 +253,11 @@ function escapeHtml(str){
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;");
+}
+
+function changePage(page){
+  currentPage = page;
+  renderPlayers();
 }
 
 // 🚀 START
