@@ -411,6 +411,13 @@ function clearMatchInputs(){
 function addMatch(){
   const t1=[],t2=[]; for(let i=0;i<5;i++){ t1.push(document.getElementById(`t1p${i}`).value.trim()); t2.push(document.getElementById(`t2p${i}`).value.trim()); }
   const md3=document.getElementById('md3score').value;
+  let winsT1 = 0;
+let winsT2 = 0;
+
+if(md3 === "2-0"){ winsT1 = 2; winsT2 = 0; }
+if(md3 === "2-1"){ winsT1 = 2; winsT2 = 1; }
+if(md3 === "0-2"){ winsT1 = 0; winsT2 = 2; }
+if(md3 === "1-2"){ winsT1 = 1; winsT2 = 2; }
   const date=document.getElementById('matchDate').value || new Date().toISOString().slice(0,10);
   const mvp=document.getElementById('mvpInput').value.trim();
   const bagre=document.getElementById('bagreInput').value.trim();
@@ -430,16 +437,20 @@ t1:0,mvpCount:0,bagreCount:0,penalidades:0}); });
   Object.keys(pointsMap).forEach(team=>{
     pointsMap[team].forEach(n=>{
       const p=findPlayer(n); if(!p) return;
-      p.jogos=(Number(p.vitorias)||0)+(Number(p.derrotas)||0)+1;
-      if(winner===team){
-  p.vitorias = (Number(p.vitorias)||0) + 1;
+      const isTeam1 = team === 'Time 1';
 
-  // só soma MD3 se realmente foi MD3
-  if(isMD3){
-    p.md3win = (Number(p.md3win)||0) + 1;
-  }
+const vitoriasGanhos = isTeam1 ? winsT1 : winsT2;
+const derrotasGanhos = isTeam1 ? winsT2 : winsT1;
+const jogosGanhos = vitoriasGanhos + derrotasGanhos;
+
+p.vitorias = (Number(p.vitorias)||0) + vitoriasGanhos;
+p.derrotas = (Number(p.derrotas)||0) + derrotasGanhos;
+p.jogos    = (Number(p.jogos)||0) + jogosGanhos;
+
+// MD3 Win só para quem ganhou a série
+if(isMD3 && ((isTeam1 && winsT1 > winsT2) || (!isTeam1 && winsT2 > winsT1))){
+  p.md3win = (Number(p.md3win)||0) + 1;
 }
-      else p.derrotas=(Number(p.derrotas)||0)+1;
       if(mvp && n===mvp) p.mvpCount=(Number(p.mvpCount)||0)+1;
       if(bagre && n===bagre) p.bagreCount=(Number(p.bagreCount)||0)+1;
       recalcPlayer(p);
