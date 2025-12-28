@@ -4,81 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draft Lobby CMIM</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cmim: '#ffd700',
+        cmimDark: '#16a34a'
+      }
+    }
+  }
+}
+</script>
+
 <style>
-  /* Reset e body */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: url('cmim.png') center/cover no-repeat;
-    opacity: 0.1; /* transparência da imagem */
-    z-index: -1;
-  }
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Navbar */
-  nav {
-    background: #000;
-    color: #fff;
-    padding: 15px 20px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  }
-
-  /* Conteúdo principal */
-  main {
-    flex: 1;
-    padding: 20px;
-    text-align: center;
-  }
-
-  h1 { color: #4caf50; margin-bottom: 15px; }
-
-  input, select, button { margin: 5px; padding: 5px; }
-
-  .playerInput { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; justify-content: center; }
-  label { font-size: 14px; color: #000; margin-left: 3px; }
-  button { cursor: pointer; background: #4caf50; border: none; color: #fff; padding: 7px 15px; border-radius: 5px; transition: 0.2s; }
-  button:hover { background: #43a047; }
-
-  .links { margin-top: 20px; }
-  a { color: #4caf50; text-decoration: none; margin-bottom: 5px; display:block; }
-
-  footer {
-    background: #000;
-    color: #fff;
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 14px;
-  }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url('cmim.png') center/cover no-repeat;
+  opacity: 0.08;
+  z-index: -1;
+}
 </style>
 </head>
-<body>
 
-<nav>CMIM Draft Lobby</nav>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col">
 
-<main>
-<h1>Lobby de Draft</h1>
+<!-- Navbar -->
+<nav class="bg-black/80 backdrop-blur border-b border-zinc-800 px-6 py-4 text-xl font-bold text-cmim shadow">
+  CMIM • Draft Lobby
+</nav>
 
-<div id="playerForm"></div>
+<!-- Conteúdo -->
+<main class="flex-1 max-w-6xl mx-auto px-4 py-8">
 
-<p>Escolha dois capitães (mesma lane recomendada):</p>
+  <h1 class="text-3xl font-extrabold text-cmim mb-2 text-center">
+    Lobby de Draft
+  </h1>
+  <p class="text-zinc-400 mb-8 text-center">
+    Preencha os jogadores e escolha dois capitães
+  </p>
 
-<button id="startDraftBtn">Iniciar Draft</button>
+  <!-- Players -->
+  <div id="playerForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"></div>
 
-<div class="links" id="draftLinks"></div>
+  <!-- Ações -->
+  <div class="text-center">
+    <button
+      id="startDraftBtn"
+      class="bg-cmim hover:bg-cmimDark transition px-8 py-3 rounded-xl font-bold text-black shadow-lg">
+      Iniciar Draft
+    </button>
+  </div>
+
+  <!-- Links -->
+  <div id="draftLinks" class="mt-8 text-center space-y-2"></div>
+
 </main>
 
-<footer>CMIM © 2025 | Todos os direitos reservados</footer>
+<!-- Footer -->
+<footer class="bg-black/80 border-t border-zinc-800 text-center text-sm text-zinc-400 py-4">
+  CMIM © 2025 • Todos os direitos reservados
+</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
@@ -90,8 +82,7 @@ const firebaseConfig = {
   projectId: "selecao-3d8f3",
   storageBucket: "selecao-3d8f3.appspot.com",
   messagingSenderId: "1074353598922",
-  appId: "1:1074353598922:web:7e6b6a130fd54397819f33",
-  measurementId: "G-ZM1ZCH82CG"
+  appId: "1:1074353598922:web:7e6b6a130fd54397819f33"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -100,103 +91,122 @@ const db = getFirestore(app);
 let players = [];
 const laneSlots = { top:2, jungle:2, mid:2, adc:2, support:2 };
 
-// Criação do formulário de jogadores
 const formDiv = document.getElementById("playerForm");
+
 Object.keys(laneSlots).forEach(lane => {
-  for(let i=1;i<=laneSlots[lane];i++){
-    const div = document.createElement("div");
-    div.className = "playerInput";
-    div.innerHTML = `
-      <input type="text" placeholder="${lane.toUpperCase()} ${i}" id="${lane}-${i}-name">
-      <select id="${lane}-${i}-tier">
-        <option value="S">S</option>
-        <option value="A+">A+</option>
-        <option value="A">A</option>
-        <option value="A-">A-</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-        <option value="F">F</option>
+  const card = document.createElement("div");
+  card.className = "bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow";
+
+  card.innerHTML = `
+    <h2 class="text-xl font-bold text-cmim mb-4">${lane.toUpperCase()}</h2>
+  `;
+
+  for (let i = 1; i <= laneSlots[lane]; i++) {
+    const row = document.createElement("div");
+    row.className = "flex flex-wrap gap-2 items-center mb-3";
+
+    row.innerHTML = `
+      <input
+        id="${lane}-${i}-name"
+        placeholder="Player ${i}"
+        class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cmim">
+
+      <select
+        id="${lane}-${i}-tier"
+        class="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2 text-sm">
+        <option>S</option>
+        <option>A+</option>
+        <option>A</option>
+        <option>A-</option>
+        <option>B</option>
+        <option>C</option>
+        <option>D</option>
+        <option>E</option>
+        <option>F</option>
       </select>
-      <input type="checkbox" name="captain" value="${lane}-${i}" id="${lane}-${i}-captain">
-      <label for="${lane}-${i}-captain">Capitão</label>
+
+      <label class="flex items-center gap-1 text-xs text-cmim cursor-pointer">
+        <input type="checkbox" name="captain" value="${lane}-${i}" class="accent-green-500">
+        Capitão
+      </label>
     `;
-    formDiv.appendChild(div);
+
+    card.appendChild(row);
   }
+
+  formDiv.appendChild(card);
 });
 
-// Limita seleção de capitães para 2
-const captainCheckboxes = document.querySelectorAll('input[name="captain"]');
-captainCheckboxes.forEach(box => {
-  box.addEventListener('change', () => {
-    const checked = document.querySelectorAll('input[name="captain"]:checked');
-    if (checked.length > 2) {
+// Limite de capitães
+document.querySelectorAll('input[name="captain"]').forEach(box => {
+  box.addEventListener("change", () => {
+    if (document.querySelectorAll('input[name="captain"]:checked').length > 2) {
       box.checked = false;
       alert("Só é permitido escolher 2 capitães!");
     }
   });
 });
 
-// Coleta players
 function collectPlayers() {
   players = [];
   let valid = true;
+
   Object.keys(laneSlots).forEach(lane => {
-    for(let i=1;i<=laneSlots[lane];i++){
-      const nameInput = document.getElementById(`${lane}-${i}-name`);
-      const tierSelect = document.getElementById(`${lane}-${i}-tier`);
-      const name = nameInput.value.trim();
-      const tier = tierSelect.value;
-      if(!name) valid = false;
-      players.push({name, lane, tier});
+    for (let i = 1; i <= laneSlots[lane]; i++) {
+      const name = document.getElementById(`${lane}-${i}-name`).value.trim();
+      const tier = document.getElementById(`${lane}-${i}-tier`).value;
+      if (!name) valid = false;
+      players.push({ name, lane, tier });
     }
   });
+
   return valid;
 }
 
-// Coleta capitães
 function collectCaptains() {
-  const checked = Array.from(document.querySelectorAll('input[name="captain"]:checked'));
-  if(checked.length !== 2) return null; 
+  const checked = [...document.querySelectorAll('input[name="captain"]:checked')];
+  if (checked.length !== 2) return null;
+
   return checked.map(c => {
-    const [lane, i] = c.value.split('-');
+    const [lane, i] = c.value.split("-");
     return document.getElementById(`${lane}-${i}-name`).value.trim();
   });
 }
 
-// Iniciar draft
 async function startDraft() {
-  if(!collectPlayers()) return alert("Preencha todos os nomes dos players!");
+  if (!collectPlayers()) return alert("Preencha todos os nomes!");
   const captains = collectCaptains();
-  if(!captains) return alert("Escolha exatamente dois capitães!");
+  if (!captains) return alert("Escolha exatamente 2 capitães!");
 
-  const tierOrder = {S:1, "A+":2, A:3, "A-":4, B:5, C:6, D:7, E:8, F:9};
-  const capObjs = captains.map(name => players.find(p => p.name === name));
-  let [capA, capB] = capObjs;
-  if(tierOrder[capA.tier] > tierOrder[capB.tier]) [capA, capB] = [capB, capA];
+  const tierOrder = {S:1,"A+":2,A:3,"A-":4,B:5,C:6,D:7,E:8,F:9};
+  let [capA, capB] = captains.map(n => players.find(p => p.name === n));
+  if (tierOrder[capA.tier] > tierOrder[capB.tier]) [capA, capB] = [capB, capA];
 
-  const draftID = Math.random().toString(36).substr(2,8);
-  const draftRef = doc(db, "drafts", draftID);
+  const draftID = Math.random().toString(36).slice(2,10);
 
-  await setDoc(draftRef, {
+  await setDoc(doc(db, "drafts", draftID), {
     players,
     captains: [capA.name, capB.name],
-    teams: {A: [], B: []},
+    teams: {A:[], B:[]},
     currentPick: "A",
     started: false,
     createdAt: serverTimestamp()
   });
 
-  const linksDiv = document.getElementById("draftLinks");
-  linksDiv.innerHTML = `
-    <p>Capitães selecionados: ${capA.name} (Time A) e ${capB.name} (Time B)</p>
-    <a href="draft.html?draft=${draftID}&team=A" target="_blank">Entrar como Time A</a>
-    <a href="draft.html?draft=${draftID}&team=B" target="_blank">Entrar como Time B</a>
+  draftLinks.innerHTML = `
+    <p class="text-cmim font-bold mb-2">
+      Capitães: ${capA.name} (A) × ${capB.name} (B)
+    </p>
+    <a class="block text-cmim underline" target="_blank" href="draft.html?draft=${draftID}&team=A">
+      Entrar como Time A
+    </a>
+    <a class="block text-cmim underline" target="_blank" href="draft.html?draft=${draftID}&team=B">
+      Entrar como Time B
+    </a>
   `;
 }
 
-document.getElementById("startDraftBtn").addEventListener("click", startDraft);
+startDraftBtn.addEventListener("click", startDraft);
 </script>
 
 </body>
