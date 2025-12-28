@@ -5,176 +5,120 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draft CMIM</title>
 
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url('cmim.png') center/cover no-repeat;
-  opacity: 0.08;
-  z-index: -1;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-nav {
-  background: #000;
-  color: #fff;
-  padding: 15px 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-main {
-  flex: 1;
-  padding: 20px;
-  margin: 15px;
-  background: rgba(255,255,255,.95);
-  border-radius: 12px;
-  text-align: center;
-}
-
-#status {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-#status.finished {
-  font-size: 26px;
-  font-weight: bold;
-  color: #4caf50;
-}
-
-#timer {
-  font-size: 26px;
-  margin: 15px 0;
-  color: #ff5722;
-  font-weight: bold;
-}
-
-#startBtn {
-  padding: 10px 25px;
-  background: linear-gradient(135deg,#4caf50,#2e7d32);
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-#playersPool {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 30px;
-}
-
-.playerCard {
-  width: 190px;
-  padding: 12px;
-  background: #f3f3f3;
-  border-radius: 10px;
-  border: 2px solid #4caf50;
-  cursor: pointer;
-  transition: .2s;
-}
-
-.playerCard.disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-#teams {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-}
-
-.teamBox {
-  width: 260px;
-  padding: 15px;
-  border-radius: 12px;
-  border: 2px solid #4caf50;
-  background: #fff;
-  transition: .3s;
-}
-
-.teamBox.active {
-  box-shadow: 0 0 25px rgba(255,87,34,.8);
-}
-
-.teamBox.finished {
-  box-shadow: 0 0 35px rgba(76,175,80,.9);
-  animation: pulse 1.2s infinite alternate;
-}
-
-@keyframes pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.04); }
-}
-
-.teamPlayer {
-  background: #e0e0e0;
-  padding: 6px 10px;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.teamPlayer.capitao {
-  background: #ffeb3b;
-}
-
-footer {
-  background: #000;
-  color: #fff;
-  padding: 10px;
-  text-align: center;
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at top, rgba(255,200,0,.15), transparent 40%),
+    url('cmim.png') center/cover no-repeat;
+  opacity:.08;
+  z-index:-1;
 }
 </style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col bg-gradient-to-br from-zinc-900 via-zinc-800 to-black text-zinc-100">
 
-<nav>CMIM Draft</nav>
+<!-- NAV -->
+<nav class="px-6 py-4 flex justify-between items-center
+bg-black/70 backdrop-blur-xl border-b border-white/10">
+  <span class="text-2xl font-extrabold tracking-wide">
+    CMIM <span class="text-yellow-400">Draft</span>
+  </span>
+  <span class="text-sm text-zinc-400">Sistema Oficial</span>
+</nav>
 
-<main>
-<h1>Draft</h1>
-<p id="status">Aguardando confirmação dos capitães...</p>
-<button id="startBtn">Confirmar Pronto</button>
-<div id="timer"></div>
+<!-- MAIN -->
+<main class="flex-1 p-6 max-w-7xl mx-auto w-full">
 
-<h2>Jogadores Disponíveis</h2>
-<div id="playersPool"></div>
+<div class="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 text-center border border-white/10">
 
-<div id="teams">
-  <div class="teamBox" id="teamBoxA">
-    <h3>Time A</h3>
-    <div id="teamA"></div>
+<h1 class="text-4xl font-extrabold mb-3 tracking-wide">
+Draft CMIM
+</h1>
+
+<p id="status" class="text-lg mb-6 text-zinc-300">
+Aguardando confirmação dos capitães...
+</p>
+
+
+<button id="startBtn"
+class="px-8 py-3 rounded-2xl font-extrabold text-black
+bg-gradient-to-r from-yellow-400 to-yellow-600
+hover:scale-110 hover:shadow-[0_0_25px_rgba(250,204,21,.8)]
+transition-all duration-300">
+CONFIRMAR PRONTO
+</button>
+
+<div id="timer" class="text-3xl font-extrabold text-orange-400 my-6"></div>
+  <div id="balanceWarning"
+class="hidden mt-4 px-6 py-3 rounded-2xl font-extrabold text-lg
+transition-all duration-300">
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-6 tracking-wide">
+Jogadores Disponíveis
+</h2>
+
+<div id="playersPool"
+class="flex flex-wrap justify-center gap-5 mb-10"></div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+<!-- TIME A -->
+<div id="teamBoxA"
+class="rounded-3xl p-5 bg-white/10 border border-white/10 transition-all duration-300">
+  <h3 class="text-2xl font-extrabold mb-4 text-green-400">
+    Time A
+  </h3>
+
+  <div id="teamA" class="space-y-3"></div>
+
+  <!-- OVERALL -->
+  <div id="overallA"
+    class="mt-4 text-lg font-extrabold text-yellow-400">
+    Overall: 0
   </div>
-  <div class="teamBox" id="teamBoxB">
-    <h3>Time B</h3>
-    <div id="teamB"></div>
+</div>
+
+<!-- TIME B -->
+<div id="teamBoxB"
+class="rounded-3xl p-5 bg-white/10 border border-white/10 transition-all duration-300">
+  <h3 class="text-2xl font-extrabold mb-4 text-green-400">
+    Time B
+  </h3>
+
+  <div id="teamB" class="space-y-3"></div>
+
+  <!-- OVERALL -->
+  <div id="overallB"
+    class="mt-4 text-lg font-extrabold text-yellow-400">
+    Overall: 0
   </div>
+</div>
+
+</div>
 </div>
 </main>
 
-<footer>CMIM © 2025</footer>
+
+
+<footer class="bg-black/70 backdrop-blur-xl border-t border-white/10
+text-center py-4 text-sm text-zinc-400">
+CMIM © 2025 • Insalubramente competitivo
+</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
+  apiKey: "AIzaSyDBBBrCIRHYE4G4pTf-GDY4gwWJUMhltI",
   authDomain: "selecao-3d8f3.firebaseapp.com",
   projectId: "selecao-3d8f3"
 });
@@ -182,10 +126,10 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const params = new URLSearchParams(window.location.search);
-const draftRef = doc(db, "drafts", params.get("draft"));
+const draftRef = doc(db,"drafts",params.get("draft"));
 const myTeam = params.get("team");
 
-const laneOrder = ["cap","top","jg","mid","adc","sup"];
+const laneOrder = ["top","jg","mid","adc","sup"];
 let timerInterval;
 let timeLeft = 30;
 let lastPick = null;
@@ -195,133 +139,288 @@ const clickSound = new Audio("click.mp3");
 const pickSound = new Audio("pick.mp3");
 const finishSound = new Audio("finish.mp3");
 
-function stopTimer() {
+const bgMusic = new Audio("musica.mpeg");
+bgMusic.volume = 0.10; // 5% do volume
+bgMusic.loop = true;
+
+/* CORES POR LANE */
+const laneColors = {
+  top:"border-blue-400 bg-blue-400/10",
+  jungle:"border-blue-400 bg-blue-400/10",
+  mid:"border-blue-400 bg-blue-400/10",
+  adc:"border-blue-400 bg-blue-400/10",
+  support:"border-blue-400 bg-blue-400/10",
+};
+
+/* CORES POR TIER */
+const tierColors = {
+  S: "text-red-400",
+
+  "A+": "text-emerald-300",
+  A: "text-emerald-400",
+  "A-": "text-emerald-600",
+
+  B: "text-yellow-400",
+  C: "text-blue-400",
+
+  D: "text-orange-400",
+  E: "text-gray-400",
+  F: "text-white"
+};
+
+const tierValues = {
+  S: 20,
+  "A+": 18,
+  A: 17,
+  "A-": 15,
+  B: 12,
+  C: 10,
+  D: 8,
+  E: 7,
+  F: 5
+};
+
+function stopTimer(){
   clearInterval(timerInterval);
-  document.getElementById("timer").textContent = "";
+  document.getElementById("timer").textContent="";
 }
 
-function startTimer(team) {
+function startTimer(team){
   clearInterval(timerInterval);
-  timeLeft = 30;
+  timeLeft=30;
 
-  timerInterval = setInterval(async () => {
-    const snap = await getDoc(draftRef);
-    const draft = snap.data();
-    if (!draft.started || draft.finished || draft.currentPick !== team) return;
+  timerInterval=setInterval(async()=>{
+    const snap=await getDoc(draftRef);
+    const draft=snap.data();
+    if(!draft.started||draft.finished||draft.currentPick!==team)return;
 
-    document.getElementById("timer").textContent =
-      `Tempo do Time ${team}: ${timeLeft}s`;
+    document.getElementById("timer").textContent=
+    `Tempo do Time ${team}: ${timeLeft}s`;
 
     timeLeft--;
-
-    if (timeLeft < 0) {
-      draft.currentPick = team === "A" ? "B" : "A";
-      await updateDoc(draftRef, draft);
+    if(timeLeft<0){
+      draft.currentPick=team==="A"?"B":"A";
+      await updateDoc(draftRef,draft);
     }
-  }, 1000);
+  },1000);
 }
 
-function sortLane(arr) {
+function sortLane(arr){
   return [...arr].sort(
     (a,b)=>laneOrder.indexOf(a.lane)-laneOrder.indexOf(b.lane)
   );
 }
 
-async function pickPlayer(name) {
-  const snap = await getDoc(draftRef);
-  const draft = snap.data();
-  if (!draft.started || draft.finished || draft.currentPick !== myTeam) return;
+function calculateOverall(teamPlayers){
+  return teamPlayers.reduce((total, p) => {
+    return total + (tierValues[p.tier] || 0);
+  }, 0);
+}
+
+async function pickPlayer(name){
+  const snap=await getDoc(draftRef);
+  const draft=snap.data();
+  if(!draft.started||draft.finished||draft.currentPick!==myTeam)return;
 
   pickSound.play();
 
-  const picked = draft.players.find(p => p.name === name);
-  if (!picked) return;
+  const picked=draft.players.find(p=>p.name===name);
+  if(!picked)return;
 
-  const lane = picked.lane;
-  const otherTeam = myTeam === "A" ? "B" : "A";
-
-  const mirrored = draft.players.find(
-    p => p.lane === lane && p.name !== name
+  const otherTeam=myTeam==="A"?"B":"A";
+  const mirrored=draft.players.find(
+    p=>p.lane===picked.lane && p.name!==name
   );
 
-  draft.players = draft.players.filter(
-    p => p.name !== name && p.lane !== lane
+  draft.players=draft.players.filter(
+    p=>p.name!==name && p.lane!==picked.lane
   );
 
   draft.teams[myTeam].push(picked);
-  if (mirrored) draft.teams[otherTeam].push(mirrored);
+  if(mirrored) draft.teams[otherTeam].push(mirrored);
 
-  if (draft.players.length === 0) {
-    draft.finished = true;
+  if(draft.players.length===0){
+    draft.finished=true;
     stopTimer();
     finishSound.play();
-  } else {
-    draft.currentPick = otherTeam;
+  }else{
+    draft.currentPick=otherTeam;
   }
 
-  await updateDoc(draftRef, draft);
+  await updateDoc(draftRef,draft);
+}
+  function getBalanceInfo(teamA, teamB){
+  const overallA = calculateOverall(teamA);
+  const overallB = calculateOverall(teamB);
+
+  const avg = (overallA + overallB) / 2 || 1;
+  const diff = Math.abs(overallA - overallB);
+  const percent = Math.round((diff / avg) * 100);
+
+  return { overallA, overallB, diff, percent };
 }
 
-function renderDraft(draft) {
+  function updateBalanceWarning(draft){
+  const warning = document.getElementById("balanceWarning");
+  const { percent } = getBalanceInfo(draft.teams.A, draft.teams.B);
 
-  ["A","B"].forEach((t,i)=>{
-    const cap = draft.captains[i];
-    draft.players = draft.players.filter(p=>p.name!==cap);
-    if (!draft.teams[t].some(p=>p.name===cap)) {
-      draft.teams[t].unshift({ name: cap, lane:"cap", tier:"CAP" });
-    }
-  });
-  updateDoc(draftRef, draft);
+  warning.className =
+    "mt-4 px-6 py-3 rounded-2xl font-extrabold text-lg transition-all duration-300";
 
-  const status = document.getElementById("status");
-  if (draft.finished) {
-    status.textContent = "TIMES DEFINIDOS";
-    status.classList.add("finished");
-  } else if (!draft.started) {
-    const ready = draft.playersStarted || [];
-    status.textContent = `Prontos: ${ready.join(" e ") || "nenhum"}`;
-  } else {
-    status.textContent = `Vez do Time ${draft.currentPick}`;
+  if (percent < 5){
+    warning.classList.add("hidden");
+    return;
   }
 
-  const pool = document.getElementById("playersPool");
-  pool.innerHTML = "";
+  warning.classList.remove("hidden");
+
+  if (percent < 10){
+    warning.textContent = `⚠️ Atenção: Diferença aceitavel de balanceamento (${percent}%)`;
+    warning.classList.add(
+      "bg-yellow-400/20",
+      "text-yellow-300",
+      "border",
+      "border-yellow-400"
+    );
+  } 
+  else if (percent < 15){
+    warning.textContent = `🚨 Ta fazendo time com a bunda? (${percent}%)`;
+    warning.classList.add(
+      "bg-orange-400/20",
+      "text-orange-300",
+      "border",
+      "border-orange-400"
+    );
+  } 
+  else {
+    warning.textContent = `❌ Tu é burro? olha o time que tu ta fazendo! (${percent}%)`;
+    warning.classList.add(
+      "bg-red-500/20",
+      "text-red-400",
+      "border",
+      "border-red-500",
+      "animate-pulse"
+    );
+  }
+}
+
+   
+function renderDraft(draft){
+
+  const overallA = calculateOverall(draft.teams.A);
+const overallB = calculateOverall(draft.teams.B);
+
+document.getElementById("overallA").textContent =
+  `Overall: ${overallA}`;
+
+document.getElementById("overallB").textContent =
+  `Overall: ${overallB}`;
+
+
+  const status=document.getElementById("status");
+  status.className="text-lg mb-6";
+
+  if(draft.finished){
+    status.textContent="TIMES DEFINIDOS";
+    status.classList.add(
+      "text-4xl","font-extrabold","text-green-400",
+      "drop-shadow-[0_0_20px_rgba(34,197,94,.9)]"
+    );
+  }else if(!draft.started){
+    status.textContent=`Prontos: ${(draft.playersStarted||[]).join(" e ")||"nenhum"}`;
+  }else{
+    status.textContent=`Vez do Time ${draft.currentPick}`;
+    updateBalanceWarning(draft);
+  }
+  
+
+  const pool=document.getElementById("playersPool");
+  pool.innerHTML="";
+
   draft.players.forEach(p=>{
-    const div = document.createElement("div");
-    div.className = "playerCard";
-    if (draft.currentPick !== myTeam || draft.finished)
-      div.classList.add("disabled");
-    div.innerHTML = `<strong>${p.name}</strong><br>${p.lane} | ${p.tier}`;
-    div.onclick = ()=>pickPlayer(p.name);
+    const div=document.createElement("div");
+    div.className=`
+      w-44 p-4 rounded-2xl border-2
+      ${laneColors[p.lane]}
+      cursor-pointer transition-all duration-300
+      hover:scale-110 hover:shadow-xl
+      font-semibold text-sm
+    `;
+
+
+    if(draft.currentPick!==myTeam||draft.finished){
+      div.classList.add("opacity-40","cursor-not-allowed");
+    }
+
+    div.innerHTML=`
+      <div class="font-extrabold text-base">${p.name}</div>
+      <div class="text-xs uppercase opacity-70">${p.lane}</div>
+      <div class="text-xs font-bold mt-1 ${tierColors[p.tier] || "text-white"}">
+        Tier ${p.tier}
+      </div>
+    `;
+
+    div.onclick=()=>pickPlayer(p.name);
     pool.appendChild(div);
   });
 
   ["A","B"].forEach(t=>{
-    const box = document.getElementById("team"+t);
-    const teamBox = document.getElementById("teamBox"+t);
-    box.innerHTML = "";
-    if (draft.finished) teamBox.classList.add("finished");
+    const box=document.getElementById("team"+t);
+    const teamBox=document.getElementById("teamBox"+t);
+    box.innerHTML="";
+
+    if(draft.finished){
+      teamBox.classList.add(
+        "shadow-[0_0_35px_rgba(34,197,94,.8)]",
+        "scale-105"
+      );
+    }
+
+  
 
     sortLane(draft.teams[t]).forEach(p=>{
-      const d = document.createElement("div");
-      d.className = "teamPlayer";
-      if (draft.captains.includes(p.name)) d.classList.add("capitao");
-      d.textContent = `${p.name} (${p.lane})`;
+      const d=document.createElement("div");
+      d.className=`
+        flex justify-between items-center px-4 py-2
+        rounded-xl border-2 ${laneColors[p.lane]}
+        font-bold text-sm
+      `;
+
+      if(draft.captains.includes(p.name)){
+        d.classList.add("bg-blue-800/80","border-blue-500","text-white");
+      }
+
+      d.innerHTML=`
+        <span>${p.name}</span>
+        <span class="text-xs uppercase flex gap-2 items-center">
+          <span>${p.lane}</span>
+          <span class="${tierColors[p.tier] || "text-white"}">
+            • ${p.tier}
+          </span>
+        </span>
+      `;
       box.appendChild(d);
     });
   });
 
-  if (draft.started && !draft.finished && draft.currentPick !== lastPick) {
-    lastPick = draft.currentPick;
+  if(draft.started&&!draft.finished&&draft.currentPick!==lastPick){
+    lastPick=draft.currentPick;
     startTimer(draft.currentPick);
   }
 
-  document.getElementById("teamBoxA").classList.toggle("active", draft.currentPick==="A");
-  document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick==="B");
+  document.getElementById("teamBoxA")
+    .classList.toggle("shadow-[0_0_30px_rgba(255,140,0,.8)]",draft.currentPick==="A");
+  document.getElementById("teamBoxB")
+    .classList.toggle("shadow-[0_0_30px_rgba(255,140,0,.8)]",draft.currentPick==="B");
 }
 
 document.getElementById("startBtn").onclick = async () => {
   clickSound.play();
+
+  if (bgMusic.paused) {
+    bgMusic.play().catch(()=>{});
+  }
+  
   const snap = await getDoc(draftRef);
   const draft = snap.data();
 
@@ -329,17 +428,43 @@ document.getElementById("startBtn").onclick = async () => {
   if (!draft.playersStarted.includes(myTeam))
     draft.playersStarted.push(myTeam);
 
+  // quando os dois confirmarem
   if (draft.playersStarted.length === 2) {
+
+    // 🔥 AQUI É O PULO DO GATO
+    draft.captains.forEach((capName, index) => {
+      const team = index === 0 ? "A" : "B";
+
+      const capPlayer = draft.players.find(p => p.name === capName);
+      if (!capPlayer) return;
+
+      // adiciona capitão no próprio time
+      draft.teams[team].push(capPlayer);
+
+      // remove do pool
+      draft.players = draft.players.filter(p => p.name !== capName);
+    });
+
     draft.started = true;
     draft.currentPick = "A";
+
     await updateDoc(draftRef, draft);
   } else {
     await updateDoc(draftRef, { playersStarted: arrayUnion(myTeam) });
   }
 };
 
-onSnapshot(draftRef, snap => renderDraft(snap.data()));
+onSnapshot(draftRef,snap=>renderDraft(snap.data()));
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
