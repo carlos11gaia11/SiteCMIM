@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CMIM - Tabela de Pontuação Insalubrinho</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --card:#0f1720; --accent:#00e5a8; --accent2:#7c5cff;
+  --muted:#9aa7b2; --danger:#ff4d6d; --panel:#071018;
+}
+*{box-sizing:border-box;font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+body{margin:0;background:linear-gradient(180deg,#051018 0%, #08121a 100%);color:#e6f0f3;padding:20px;min-height:100vh;}
+.wrap{max-width:none;margin:0;width:100%;}
+header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:0.6px}
+.top-row{display:grid;grid-template-columns:1fr 420px;gap:16px;margin-bottom:16px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:center}
+th{font-size:12px;color:var(--muted);font-weight:600}
+tbody tr:hover{background:rgba(124,92,255,0.03)}
+.puntos{font-weight:800;color:var(--accent)}
+.muted-cell{color:var(--muted)}
+#playersTable input:disabled {background:none !important;border:none !important;outline:none !important;color:#fff;font-weight:700;cursor:not-allowed !important;padding:0;text-align:center;}
+#playersTable thead th {position: sticky;top:0;z-index:10;background:#0f1720;}
+#toggleEditBtn {padding:6px 10px;border-radius:8px;font-weight:700;background: linear-gradient(90deg,var(--accent),var(--accent2));color: #001112;border: none;cursor: pointer;}
+#toggleEditBtn.off {background: rgba(255,255,255,0.03); color: var(--muted);}
+
+/* 🔥 MODAL / POPUP */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 9999;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-card {
+  background: linear-gradient(180deg, #0f1720, #09121a);
+  border-radius: 14px;
+  padding: 20px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  transform: scale(0.9) translateY(10px);
+  transition: all 0.25s ease;
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-card h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.modal-card p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  flex: 1;
+  background: linear-gradient(90deg,var(--accent),var(--accent2));
+  color: #001112;
+  font-weight: 800;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#searchPlayer {
+  color: #ffffff; /* texto digitado */
+}
+
+#searchPlayer::placeholder {
+  color: rgba(255, 255, 255, 0.6); /* placeholder */
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div>
+  <h1>CMIM - Tabela de Pontuação Insalubrinho</h1>
+  <div class="small">Painel de jogadores</div>
+</div>
+</header>
+
+<div class="top-row">
+<!-- Left card -->
+<div class="card" id="playersCard">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div><strong>Lista de Jogadores</strong> <span class="pill" id="totalPlayers">0</span></div>
+    <div class="controls">
+      <button id="toggleEditBtn" onclick="toggleEditMode()">Modo Edição: ON</button>
+      <input id="searchPlayer" placeholder="Pesquisar..." onkeyup="renderPlayers()" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);width:180px">
+      <button onclick="exportJSON()">Export JSON</button>
+      <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+  </div>
+
+  <div style="overflow:auto;max-height:700px">
+    <table id="playersTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Jogador</th><th>Pontos</th><th>Jogos</th><th>Vitórias</th><th>Derrotas</th><th>MD3 Win</th>
+          <th>Torneio 4º</th>
+<th>Torneio 3º</th>
+<th>Torneio 2º</th>
+<th>Torneio 1º</th>
+<th>Winrate%</th>
+<th>MVP</th><th>Bagre</th><th>Penalidades</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="playerAddPanel" style="display:flex;gap:8px;margin-top:10px;align-items:center">
+    <input id="newPlayerName" placeholder="Nome do jogador">
+    <button onclick="uiAddPlayer()">Adicionar Jogador</button>
+    <button class="btn-ghost" onclick="clearAll()">Resetar</button>
+  </div>
+</div>
+
+<!-- Right card -->
+<div class="card" id="matchRegisterCard">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div><strong>Registrar Partida (MD3 • 5x5)</strong></div>
+    <div class="small">Formato: 2x0 ou 2x1</div>
+  </div>
+
+  <label>Time 1 (5 jogadores)</label>
+  <div class="team-input" id="team1" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+    <input id="t1p0" placeholder="Player 1">
+    <input id="t1p1" placeholder="Player 2">
+    <input id="t1p2" placeholder="Player 3">
+    <input id="t1p3" placeholder="Player 4">
+    <input id="t1p4" placeholder="Player 5">
+  </div>
+
+  <label style="margin-top:8px">Time 2 (5 jogadores)</label>
+  <div class="team-input" id="team2" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+    <input id="t2p0" placeholder="Player 1">
+    <input id="t2p1" placeholder="Player 2">
+    <input id="t2p2" placeholder="Player 3">
+    <input id="t2p3" placeholder="Player 4">
+    <input id="t2p4" placeholder="Player 5">
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+    <label>Placar MD3</label>
+    <select id="md3score">
+      <option value="1-0">1x0 - Time 1</option> 
+      <option value="0-1">0x1 - Time 2</option> 
+      <option value="2-0">2x0 - Time 1</option>
+      <option value="2-1">2x1 - Time 1</option>
+      <option value="0-2">0x2 - Time 2</option>
+      <option value="1-2">1x2 - Time 2</option>
+    </select>
+
+    <label>Data</label>
+    <input type="date" id="matchDate" style="padding:6px;border-radius:8px">
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+    <label style="width:60px">MVP</label>
+    <input id="mvpInput" placeholder="Nome do MVP">
+    <label style="width:60px">Bagre</label>
+    <input id="bagreInput" placeholder="Nome do Bagre">
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button onclick="abrirPopupResultado()">Adicionar Resultado</button>
+    <button class="btn-ghost" onclick="document.getElementById('matchDate').value='';clearMatchInputs()">Limpar</button>
+  </div>
+
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+  <div>
+    <strong>Histórico de Partidas</strong>
+    <div class="filter" style="margin-top:6px;display:flex;gap:8px">
+      <input id="historyFilter" placeholder="Filtrar por jogador / time" oninput="renderHistory()" style="padding:6px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);width:220px">
+      <button class="btn-ghost" onclick="document.getElementById('historyFilter').value='';renderHistory()">Limpar</button>
+    </div>
+    <div class="history card" id="historyCard" style="padding:8px;max-height:320px;overflow:auto">
+      <table id="historyTable" style="width:100%">
+        <thead>
+          <tr>
+            <th>Data</th><th>Time 1</th><th>Time 2</th><th>Placar</th><th>Vencedor</th><th>MVP</th><th>Bagre</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer style="margin-top:18px;color:var(--muted);font-size:13px;text-align:center">
+Como são contados os pontos?<br>
+Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Torneio 4º -5 • Torneio 3º +5 • Torneio 2º +10 • Torneio 1º +15 • MVP +2 • Bagre -3
+</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const RULES = { 
+  eachGame:0.5,
+  victory:2,
+  defeat:-2.5,
+  md3win:1.5,
+
+  torneio4:-5,
+  torneio3:5,
+  torneio2:10,
+  torneio1:15,
+
+  mvp:2,
+  bagrePenalty:-3
+};
+
+// 🔵 Inicializar Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim",
+  storageBucket: "login-cmim.firebasestorage.app",
+  messagingSenderId: "1003784143194",
+  appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363",
+  measurementId: "G-F32670E0H4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let state = { players: [], history: [] };
+let editMode = true;
+
+// 🔵 Firebase
+async function saveState() {
+  try { await db.collection('cmim').doc('state').set(state); console.log("Dados salvos no Firebase!"); }
+  catch(err){ console.error("Erro ao salvar no Firebase:", err);}
+}
+
+async function loadState() {
+  try{
+    const doc = await db.collection('cmim').doc('state').get();
+    if(doc.exists){ state = doc.data(); console.log("Dados carregados do Firebase!"); }
+    else{ state = { players: [], history: [] }; }
+  } catch(err){ console.error("Erro ao carregar do Firebase:", err);}
+}
+
+// 🔵 Player Functions
+function findPlayer(name){
+  if(!name) return null;
+  const n = name.trim();
+  return state.players.find(p=>p.name.toLowerCase()===n.toLowerCase())||null;
+}
+
+function uiAddPlayer(){
+  const input=document.getElementById('newPlayerName');
+  const name=input.value.trim();
+  if(!name) return alert('Digite um nome de jogador.');
+  if(findPlayer(name)) return alert('Jogador já cadastrado.');
+
+  state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,t4:0,
+t3:0,
+t2:0,
+t1:0,mvpCount:0,bagreCount:0,penalidades:0});
+  input.value=''; saveState(); renderPlayers();
+}
+
+function clearAll(){
+  if(!confirm('Tem certeza? Isso irá limpar TODOS os dados salvos.')) return;
+  state = {players:[], history:[]}; saveState(); renderPlayers(); renderHistory();
+}
+
+function recalcPlayer(p){
+  const jogos=Number(p.jogos)||0;
+  const vitorias=Number(p.vitorias)||0;
+  const derrotas=Number(p.derrotas)||0;
+  const md3=Number(p.md3win)||0;
+const t4 = Number(p.t4) || 0;
+const t3 = Number(p.t3) || 0;
+const t2 = Number(p.t2) || 0;
+const t1 = Number(p.t1) || 0;
+  const mvp=Number(p.mvpCount)||0;
+  const bagre=Number(p.bagreCount)||0;
+  const penal=Number(p.penalidades)||0;
+
+  let pts=0;
+  pts += jogos*RULES.eachGame;
+  pts += vitorias*RULES.victory;
+  pts += derrotas*RULES.defeat;
+  pts += md3*RULES.md3win;
+pts += t4 * RULES.torneio4;
+pts += t3 * RULES.torneio3;
+pts += t2 * RULES.torneio2;
+pts += t1 * RULES.torneio1;
+  pts += mvp*RULES.mvp;
+  pts += bagre*RULES.bagrePenalty;
+  pts -= penal;
+
+  p.pontos=Number(pts.toFixed(2));
+}
+
+function onPlayerFieldEdit(elem,field,name){
+  const p=findPlayer(name); if(!p) return;
+  p[field]=Number(elem.value)||0;
+  if(field==='vitorias'||field==='derrotas'){ p.jogos=(Number(p.vitorias)||0)+(Number(p.derrotas)||0); }
+  saveState();
+}
+
+function toggleEditMode(){
+  editMode=!editMode;
+  const btn=document.getElementById("toggleEditBtn");
+  btn.textContent = editMode ? "Modo Edição: ON" : "Modo Edição: OFF";
+  btn.classList.toggle("off",!editMode);
+
+  document.querySelectorAll("#playersTable input").forEach(i=>i.disabled=!editMode);
+  document.getElementById("matchRegisterCard").style.display = editMode ? "block":"none";
+  document.getElementById("playerAddPanel").style.display = editMode ? "flex":"none";
+
+  if(!editMode){
+    state.players.forEach(p=>{p.jogos=(Number(p.vitorias)||0)+(Number(p.derrotas)||0); recalcPlayer(p);});
+    renderPlayers(); saveState();
+  }
+}
+
+function renderPlayers(){
+  const tbody=document.querySelector('#playersTable tbody');
+  tbody.innerHTML='';
+  const q=(document.getElementById('searchPlayer').value||'').toLowerCase();
+  const list=state.players.filter(p=>p.name.toLowerCase().includes(q)).sort((a,b)=>b.pontos-a.pontos);
+  document.getElementById('totalPlayers').innerText=list.length;
+
+  list.forEach((p,i)=>{
+    p.jogos=(Number(p.vitorias)||0)+(Number(p.derrotas)||0); recalcPlayer(p);
+    const pos=i+1;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><strong>${pos}</strong></td>
+      <td style="text-align:left"><span class="clickable" onclick="filterHistoryBy('${escapeHtml(p.name)}')">${escapeHtml(p.name)}</span></td>
+      <td class="puntos">${p.pontos.toFixed(2)}</td>
+      <td>${p.jogos}</td>
+      <td><input type="number" value="${p.vitorias}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'vitorias','${escapeJs(p.name)}')"></td>
+      <td><input type="number" value="${p.derrotas}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'derrotas','${escapeJs(p.name)}')"></td>
+      <td><input type="number" value="${p.md3win}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'md3win','${escapeJs(p.name)}')"></td>
+<td><input type="number" value="${p.t4}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t4','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t3}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t3','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t2}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t2','${escapeJs(p.name)}')"></td>
+
+<td><input type="number" value="${p.t1}" min="0" style="width:60px"
+  onchange="onPlayerFieldEdit(this,'t1','${escapeJs(p.name)}')"></td>
+      <td class="muted-cell">${(p.jogos>0?((p.vitorias/p.jogos)*100).toFixed(1):'0.0')}%</td>
+      <td><input type="number" value="${p.mvpCount}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'mvpCount','${escapeJs(p.name)}')"></td>
+      <td><input type="number" value="${p.bagreCount}" min="0" style="width:60px" onchange="onPlayerFieldEdit(this,'bagreCount','${escapeJs(p.name)}')"></td>
+      <td><input type="number" value="${p.penalidades}" style="width:60px" onchange="onPlayerFieldEdit(this,'penalidades','${escapeJs(p.name)}')"></td>`;
+    if(!editMode) tr.querySelectorAll('input').forEach(i=>i.disabled=true);
+    tbody.appendChild(tr);
+  });
+}
+
+// 🔵 Match functions
+function clearMatchInputs(){
+  for(let i=0;i<5;i++){ document.getElementById(`t1p${i}`).value=''; document.getElementById(`t2p${i}`).value=''; }
+  document.getElementById('md3score').value='1-0'; document.getElementById('mvpInput').value=''; document.getElementById('bagreInput').value='';
+  document.getElementById('matchDate').value='';
+}
+
+function addMatch(){
+  const t1=[],t2=[]; for(let i=0;i<5;i++){ t1.push(document.getElementById(`t1p${i}`).value.trim()); t2.push(document.getElementById(`t2p${i}`).value.trim()); }
+  const md3=document.getElementById('md3score').value;
+ let winsT1 = 0;
+let winsT2 = 0;
+
+// BO1
+if(md3 === "1-0"){ winsT1 = 1; winsT2 = 0; }
+if(md3 === "0-1"){ winsT1 = 0; winsT2 = 1; }
+
+// MD3
+if(md3 === "2-0"){ winsT1 = 2; winsT2 = 0; }
+if(md3 === "2-1"){ winsT1 = 2; winsT2 = 1; }
+if(md3 === "0-2"){ winsT1 = 0; winsT2 = 2; }
+if(md3 === "1-2"){ winsT1 = 1; winsT2 = 2; }
+  const date=document.getElementById('matchDate').value || new Date().toISOString().slice(0,10);
+  const mvp=document.getElementById('mvpInput').value.trim();
+  const bagre=document.getElementById('bagreInput').value.trim();
+
+  if(t1.some(p=>!p)||t2.some(p=>!p)) return alert('Todos os jogadores devem ser preenchidos.');
+  const isMD3 = ['2-0','2-1','0-2','1-2'].includes(md3);
+const winner = ['2-0','2-1','1-0'].includes(md3) ? 'Time 1' : 'Time 2';
+
+  state.history.push({date,t1,t2,md3, winner, mvp, bagre});
+  [t1,t2].flat().forEach(name=>{ let p=findPlayer(name); if(!p) state.players.push({name,pontos:0,jogos:0,vitorias:0,derrotas:0,md3win:0,t4:0,
+t3:0,
+t2:0,
+t1:0,mvpCount:0,bagreCount:0,penalidades:0}); });
+  
+  // Atualizar stats
+  const pointsMap = { 'Time 1': t1, 'Time 2': t2 };
+  Object.keys(pointsMap).forEach(team=>{
+    pointsMap[team].forEach(n=>{
+      const p=findPlayer(n); if(!p) return;
+      const isTeam1 = team === 'Time 1';
+
+const vitoriasGanhos = isTeam1 ? winsT1 : winsT2;
+const derrotasGanhos = isTeam1 ? winsT2 : winsT1;
+const jogosGanhos = vitoriasGanhos + derrotasGanhos;
+
+p.vitorias = (Number(p.vitorias)||0) + vitoriasGanhos;
+p.derrotas = (Number(p.derrotas)||0) + derrotasGanhos;
+p.jogos    = (Number(p.jogos)||0) + jogosGanhos;
+
+// MD3 Win só para quem ganhou a série
+if(isMD3 && ((isTeam1 && winsT1 > winsT2) || (!isTeam1 && winsT2 > winsT1))){
+  p.md3win = (Number(p.md3win)||0) + 1;
+}
+      if(mvp && n===mvp) p.mvpCount=(Number(p.mvpCount)||0)+1;
+      if(bagre && n===bagre) p.bagreCount=(Number(p.bagreCount)||0)+1;
+      recalcPlayer(p);
+    });
+  });
+  saveState(); renderPlayers(); renderHistory(); clearMatchInputs();
+}
+
+function renderHistory(){
+  const tbody=document.querySelector('#historyTable tbody');
+  tbody.innerHTML='';
+  const q=(document.getElementById('historyFilter').value||'').toLowerCase();
+  state.history.filter(h=>{
+    const allPlayers = [
+  ...h.t1,
+  ...h.t2,
+  h.mvp || '',
+  h.bagre || ''
+].join(' ').toLowerCase();
+
+    return allPlayers.includes(q);
+  }).forEach(h=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${h.date}</td>
+      <td>${h.t1.join(', ')}</td>
+      <td>${h.t2.join(', ')}</td>
+      <td>${h.md3}</td>
+      <td>${h.winner}</td>
+      <td>${h.mvp || '-'}</td>
+      <td>${h.bagre || '-'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterHistoryBy(name){ document.getElementById('historyFilter').value=name; renderHistory(); }
+
+// 🔵 JSON Export/Import
+function exportJSON(){ const a=document.createElement('a'); a.href='data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(state,null,2)); a.download='cmim.json'; a.click(); }
+function importJSON(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ try{state=JSON.parse(ev.target.result); saveState(); renderPlayers(); renderHistory(); alert('Importado com sucesso!'); } catch(err){alert('Erro ao importar JSON.');} }; reader.readAsText(file); }
+
+function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escapeJs(text){ return text.replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+
+// 🔵 Inicializar
+(async()=>{ await loadState(); renderPlayers(); renderHistory(); toggleEditMode(); })();
+
+
+let pendingMatch = false;
+
+function abrirPopupResultado() {
+  document.getElementById("resultModal").classList.add("active");
+}
+
+function fecharPopupResultado() {
+  document.getElementById("resultModal").classList.remove("active");
+}
+
+function confirmarResultado() {
+  fecharPopupResultado();
+  addMatch(); // chama sua função original
+  mostrarSucesso();
+}
+
+function mostrarSucesso() {
+  const msg = document.createElement("div");
+  msg.textContent = "✅ Resultado adicionado com sucesso!";
+  msg.style.position = "fixed";
+  msg.style.bottom = "20px";
+  msg.style.right = "20px";
+  msg.style.background = "linear-gradient(90deg,var(--accent),var(--accent2))";
+  msg.style.color = "#001112";
+  msg.style.padding = "12px 16px";
+  msg.style.borderRadius = "10px";
+  msg.style.fontWeight = "800";
+  msg.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
+  msg.style.zIndex = "9999";
+  msg.style.opacity = "0";
+  msg.style.transition = "opacity 0.3s ease";
+
+  document.body.appendChild(msg);
+
+  requestAnimationFrame(() => msg.style.opacity = "1");
+  setTimeout(() => {
+    msg.style.opacity = "0";
+    setTimeout(() => msg.remove(), 300);
+  }, 2500);
+}
+</script>
+
+<!-- 🔥 POPUP CONFIRMAÇÃO DE RESULTADO -->
+<div id="resultModal" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Confirmar Resultado</h3>
+    <p>Tem certeza que deseja adicionar este resultado?</p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharPopupResultado()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarResultado()">Confirmar</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
