@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMIM • Tabela de Pontuação</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b0f14;
+  --card:#0f1720;
+  --accent:#00e5a8;
+  --accent2:#7c5cff;
+  --muted:#9aa7b2;
+}
+*{box-sizing:border-box;font-family:Montserrat,system-ui}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#051018,#08121a);
+  color:#e6f0f3;
+  padding:20px;
+}
+.wrap{max-width:1200px;margin:auto}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.05);
+}
+h1{
+  margin:0 0 12px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:.6px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+th,td{
+  padding:8px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:center;
+}
+th{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+tbody tr:hover{
+  background:rgba(124,92,255,.04);
+}
+.pontos{
+  color:var(--accent);
+  font-weight:800;
+}
+.search{
+  margin-bottom:10px;
+}
+.search input{
+  width:220px;
+  padding:8px;
+  border-radius:8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.08);
+  color:#fff;
+}
+footer{
+  margin-top:16px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.table-container{
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+thead th{
+  position: sticky;
+  top: 0;
+  background: #0f1720;
+  z-index: 2;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>CMIM • Tabela de Pontuação • INSALUBRE</h1>
+
+    <div class="search">
+      <input id="searchPlayer" placeholder="Pesquisar jogador..." 
+       oninput="currentPage = 1; renderPlayers()">
+    </div>
+
+    <div class="table-container">
+  <table id="playersTable">
+      <thead>
+<tr>
+  <th>#</th>
+  <th style="text-align:left">Jogador</th>
+  <th>Pontos</th>
+
+  <th>Jogos</th>
+  <th>Vitória</th>
+  <th>Derrota</th>
+  <th>MD3</th>
+
+  <th>T1º</th>
+  <th>T2º</th>
+  <th>T3º</th>
+  <th>T4º</th>
+
+  <th>Winrate</th>
+  <th>MVP</th>
+  <th>Bagre</th>
+<th>Penalidades</th>
+
+</tr>
+</thead>
+      <tbody></tbody>
+    </table>
+<div id="pagination" style="margin-top:12px; text-align:center;"></div>
+  </div>
+
+  <footer>
+    Dados atualizados em tempo real • CMIM
+  </footer>
+</div>
+
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// 🔵 CONFIG FIREBASE (MESMO DO ADMIN)
+const firebaseConfig = {
+  apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+  authDomain: "login-cmim.firebaseapp.com",
+  projectId: "login-cmim",
+  storageBucket: "login-cmim.firebasestorage.app",
+  messagingSenderId: "1003784143194",
+  appId: "1:1003784143194:web:4e059a0f7f592eb3b0b363"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 🔵 STATE (SOMENTE LEITURA)
+let state = {
+  players: [],
+  history: []
+};
+
+let currentPage = 1;
+const playersPerPage = 20;
+
+// 🔥 LISTENER EM TEMPO REAL
+function listenFirebase(){
+  db.collection("cmim").doc("state")
+    .onSnapshot(doc=>{
+      if(!doc.exists) return;
+      state = doc.data();
+      renderPlayers();
+    });
+}
+
+// 🔵 RENDERIZA TABELA
+function renderPlayers(){
+  const tbody = document.querySelector("#playersTable tbody");
+  const pagination = document.getElementById("pagination");
+
+  tbody.innerHTML = "";
+  pagination.innerHTML = "";
+
+  const q = document.getElementById("searchPlayer").value.toLowerCase();
+
+  const list = (state.players || [])
+  .filter(p => (p.name || "").toLowerCase().includes(q))
+  .sort((a,b)=>b.pontos - a.pontos);
+
+const totalPages = Math.ceil(list.length / playersPerPage);
+if(currentPage > totalPages) currentPage = 1;
+
+const start = (currentPage - 1) * playersPerPage;
+const pagePlayers = list.slice(start, start + playersPerPage);
+
+  pagePlayers.forEach((p,i)=>{
+    const jogos = (p.vitorias||0)+(p.derrotas||0);
+    const winrate = jogos>0 ? ((p.vitorias/jogos)*100).toFixed(1) : "0.0";
+
+    const tr = document.createElement("tr");
+tr.innerHTML = `
+  <td><strong>${start + i + 1}</strong></td>
+  <td style="text-align:left">${escapeHtml(p.name)}</td>
+
+  <td class="pontos">${(p.pontos||0).toFixed(2)}</td>
+
+  <td>${jogos}</td>
+  <td>${p.vitorias||0}</td>
+  <td>${p.derrotas||0}</td>
+  <td>${p.md3win||0}</td>
+
+  <td>${p.t1 || 0}</td>
+  <td>${p.t2 || 0}</td>
+  <td>${p.t3 || 0}</td>
+  <td>${p.t4 || 0}</td>
+
+
+  <td>${winrate}%</td>
+  <td>${p.mvpCount||0}</td>
+  <td>${p.bagreCount||0}</td>
+<td>${p.penalidades || 0}</td>
+`;
+    tbody.appendChild(tr);
+  });
+// 🔢 BOTÕES DE PAGINAÇÃO
+if(totalPages > 1){
+
+  if(currentPage > 1){
+    pagination.innerHTML += `
+      <button onclick="changePage(${currentPage - 1})"
+        style="margin:0 4px;padding:6px 10px;border-radius:6px">
+        ⬅️
+      </button>`;
+  }
+
+  pagination.innerHTML += `
+    <span style="margin:0 8px">
+      Página ${currentPage} de ${totalPages}
+    </span>
+  `;
+
+  if(currentPage < totalPages){
+    pagination.innerHTML += `
+      <button onclick="changePage(${currentPage + 1})"
+        style="margin:0 4px;padding:6px 10px;border-radius:6px">
+        ➡️
+      </button>`;
+  }
+}
+}
+
+// 🔵 SEGURANÇA BÁSICA
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+function changePage(page){
+  currentPage = page;
+  renderPlayers();
+}
+
+// 🚀 START
+listenFirebase();
+</script>
+</body>
+</html>
+
+
