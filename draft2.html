@@ -87,16 +87,30 @@ font-weight:800;
 color:#FFD000;
 }
 
-.overall{
-margin-top:12px;
-font-size:18px;
-font-weight:800;
+.voteBox{
+
+margin-top:40px;
+border:3px solid black;
+padding:25px;
+border-radius:12px;
+
 }
 
-.balance{
-margin-top:30px;
+button{
+
+background:black;
+color:white;
+border:none;
+padding:12px 18px;
+margin:6px;
+border-radius:8px;
+cursor:pointer;
 font-weight:700;
-font-size:18px;
+
+}
+
+button:hover{
+opacity:.85;
 }
 
 </style>
@@ -118,51 +132,58 @@ CMIM <span>Draft</span>
 <div class="team">
 <h2>Time A</h2>
 <div id="teamA"></div>
-<div class="overall" id="overallA"></div>
+<div id="overallA"></div>
 </div>
 
 <div class="team">
 <h2>Time B</h2>
 <div id="teamB"></div>
-<div class="overall" id="overallB"></div>
+<div id="overallB"></div>
 </div>
 
 </div>
 
-<div class="balance" id="balanceInfo"></div>
+<div id="voteArea"></div>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+getFirestore,
+doc,
+onSnapshot,
+updateDoc,
+setDoc,
+collection
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 
 const firebaseConfig = {
+
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
 authDomain:"login-cmim.firebaseapp.com",
 projectId:"login-cmim"
+
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-/* PEGAR ID DO DRAFT */
-
 const params = new URLSearchParams(window.location.search);
 const draftId = params.get("draft");
 
-if(!draftId){
-alert("Sala inválida");
-}
-
-document.getElementById("roomInfo").innerText = "Sala: " + draftId;
+document.getElementById("roomInfo").innerText="Sala: "+draftId;
 
 
-/* VALOR DOS TIERS */
+
+/* VALOR TIERS */
 
 const tierValues={
+
 "S":12,
 "A+":11,
 "A":10,
@@ -172,10 +193,12 @@ const tierValues={
 "D":6,
 "E":5,
 "F":4
+
 };
 
 
-/* BALANCEAR TIMES */
+
+/* BALANCEAMENTO SNAKE DRAFT */
 
 function balanceTeams(players){
 
@@ -184,31 +207,25 @@ players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier]);
 const teamA=[];
 const teamB=[];
 
-let scoreA=0;
-let scoreB=0;
+players.forEach((p,i)=>{
 
-players.forEach(p=>{
-
-const value = tierValues[p.tier] || 0;
-
-if(scoreA<=scoreB){
+if(i%4===0 || i%4===3){
 teamA.push(p);
-scoreA+=value;
 }else{
 teamB.push(p);
-scoreB+=value;
 }
 
 });
 
-return {teamA,teamB,scoreA,scoreB};
+return {teamA,teamB};
 
 }
 
 
-/* RENDER */
 
-function render(teamA,teamB,scoreA,scoreB){
+/* RENDER TIMES */
+
+function render(teamA,teamB){
 
 const divA=document.getElementById("teamA");
 const divB=document.getElementById("teamB");
@@ -244,38 +261,153 @@ ${p.nick}
 
 });
 
-document.getElementById("overallA").innerText="Overall: "+scoreA;
-document.getElementById("overallB").innerText="Overall: "+scoreB;
-
-const diff=Math.abs(scoreA-scoreB);
-
-document.getElementById("balanceInfo").innerText=
-"Balanceamento diferença: "+diff;
+renderVote(teamA,teamB)
 
 }
 
 
-/* ESCUTAR SALA DO DRAFT */
+
+/* VOTAÇÃO */
+
+function renderVote(teamA,teamB){
+
+const voteArea=document.getElementById("voteArea");
+
+voteArea.innerHTML=`
+
+<div class="voteBox">
+
+<h2>Resultado da Série</h2>
+
+<button onclick="voteWinner('A')">Time A venceu</button>
+<button onclick="voteWinner('B')">Time B venceu</button>
+
+<br><br>
+
+<button onclick="voteScore('2-0')">2-0</button>
+<button onclick="voteScore('2-1')">2-1</button>
+
+</div>
+
+`
+
+window.voteWinner=(team)=>{
+
+window.winner=team;
+
+renderMVP(teamA,teamB);
+
+}
+
+window.voteScore=(score)=>{
+
+window.score=score;
+
+}
+
+}
+
+
+
+/* MVP + BAGRE */
+
+function renderMVP(teamA,teamB){
+
+let winnerTeam = window.winner==="A" ? teamA : teamB
+let loserTeam = window.winner==="A" ? teamB : teamA
+
+let html=`<div class="voteBox"><h2>MVP</h2>`
+
+winnerTeam.forEach(p=>{
+
+html+=`<button onclick="voteMVP('${p.nick}')">${p.nick}</button>`
+
+})
+
+html+=`<h2>Bagre</h2>`
+
+loserTeam.forEach(p=>{
+
+html+=`<button onclick="voteBagre('${p.nick}')">${p.nick}</button>`
+
+})
+
+html+=`</div>`
+
+document.getElementById("voteArea").innerHTML=html;
+
+window.voteMVP=(nick)=>{
+
+window.mvp=nick
+
+checkFinish()
+
+}
+
+window.voteBagre=(nick)=>{
+
+window.bagre=nick
+
+checkFinish()
+
+}
+
+}
+
+
+
+/* FINALIZAR */
+
+async function checkFinish(){
+
+if(!window.mvp || !window.bagre || !window.score) return
+
+await setDoc(doc(collection(db,"results")),{
+
+draft:draftId,
+winner:window.winner,
+score:window.score,
+mvp:window.mvp,
+bagre:window.bagre,
+time:Date.now()
+
+})
+
+/* RESET QUEUE */
+
+await updateDoc(doc(db,"queue","players"),{
+
+list:[]
+
+})
+
+alert("Votação concluída!")
+
+window.location.href="home.html"
+
+}
+
+
+
+/* ESCUTAR DRAFT */
 
 const draftRef = doc(db,"drafts",draftId);
 
 onSnapshot(draftRef,(snap)=>{
 
-if(!snap.exists()) return;
+if(!snap.exists()) return
 
-const data = snap.data();
-
-const players = data.players || [];
+const players = snap.data().players || []
 
 if(players.length===10){
 
-const {teamA,teamB,scoreA,scoreB} = balanceTeams(players);
+const {teamA,teamB}=balanceTeams(players)
 
-render(teamA,teamB,scoreA,scoreB);
+render(teamA,teamB)
 
 }
 
-});
+})
 
 </script>
 
