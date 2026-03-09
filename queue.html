@@ -241,8 +241,14 @@ renderFila(d.id,d.data(),div)
 
 function renderFila(id,data,container){
 
+  if(data.status === "draft"){
+ window.location.href = "draft2.html";
+}
+
 const div=document.createElement("div");
 div.className="queue";
+
+  
 
 const totalPlayers =
 Object.values(data.lanes).flat().length;
@@ -480,11 +486,15 @@ await updateDoc(ref,{ready:d.ready});
 
 
 
-window.startQueue=async(id)=>{
+window.startQueue = async(id)=>{
 
-await updateDoc(doc(db,"queues",id),{
-status:"iniciando"
-});
+ const ref = doc(db,"queues",id);
+
+ await updateDoc(ref,{
+  status:"draft"
+ });
+
+};
 
 alert("Todos prontos! Iniciando partida.");
 
@@ -597,3 +607,4 @@ ready:{}
 
 </body>
 </html>
+
