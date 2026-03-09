@@ -148,6 +148,11 @@ const lolNick=params.get("nick")
 
 document.getElementById("roomInfo").innerText="Sala: "+draftId
 
+let teamA=[]
+let teamB=[]
+let winnerTeam=[]
+let loserTeam=[]
+
 
 /* TIERS */
 
@@ -162,27 +167,30 @@ function balanceTeams(players){
 
 players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier])
 
-const teamA=[]
-const teamB=[]
+const A=[]
+const B=[]
 
 players.forEach((p,i)=>{
 
 if(i%4===0||i%4===3){
-teamA.push(p)
+A.push(p)
 }else{
-teamB.push(p)
+B.push(p)
 }
 
 })
 
-return{teamA,teamB}
+return{teamA:A,teamB:B}
 
 }
 
 
 /* RENDER TIMES */
 
-function render(teamA,teamB){
+function render(A,B){
+
+teamA=A
+teamB=B
 
 const divA=document.getElementById("teamA")
 const divB=document.getElementById("teamB")
@@ -203,7 +211,7 @@ renderResultVote()
 }
 
 
-/* ================= RESULTADO ================= */
+/* RESULTADO */
 
 function renderResultVote(){
 
@@ -213,22 +221,27 @@ document.getElementById("voteArea").innerHTML=`
 
 <h2>Resultado da Série</h2>
 
-<button onclick="voteResult('A',this)">Time A venceu</button>
-<button onclick="voteResult('B',this)">Time B venceu</button>
+<button id="btnA">Time A venceu</button>
+<button id="btnB">Time B venceu</button>
 
 <br><br>
 
-<button onclick="voteScore('2-0',this)">2-0</button>
-<button onclick="voteScore('2-1',this)">2-1</button>
+<button id="btn20">2-0</button>
+<button id="btn21">2-1</button>
 
 </div>
 
 `
 
+document.getElementById("btnA").onclick=()=>voteResult("A")
+document.getElementById("btnB").onclick=()=>voteResult("B")
+document.getElementById("btn20").onclick=()=>voteScore("2-0")
+document.getElementById("btn21").onclick=()=>voteScore("2-1")
+
 }
 
 
-window.voteResult=async function(team,btn){
+async function voteResult(team){
 
 const ref=doc(db,"votes",draftId)
 
@@ -236,21 +249,22 @@ const snap=await getDoc(ref)
 
 let data=snap.exists()?snap.data():{}
 
-if(data.resultVotes?.[lolNick]) return
-
 if(!data.resultVotes) data.resultVotes={}
+if(data.resultVotes[lolNick]) return
 
 data.resultVotes[lolNick]=team
 
 await setDoc(ref,data)
 
-btn.classList.add("voted")
+winnerTeam = team==="A"?teamA:teamB
+loserTeam = team==="A"?teamB:teamA
 
-showFinishButton()
+renderMVP()
 
 }
 
-window.voteScore=async function(score,btn){
+
+async function voteScore(score){
 
 const ref=doc(db,"votes",draftId)
 
@@ -258,24 +272,42 @@ const snap=await getDoc(ref)
 
 let data=snap.exists()?snap.data():{}
 
-if(data.scoreVotes?.[lolNick]) return
-
 if(!data.scoreVotes) data.scoreVotes={}
+if(data.scoreVotes[lolNick]) return
 
 data.scoreVotes[lolNick]=score
 
 await setDoc(ref,data)
 
-btn.classList.add("voted")
+}
 
-showFinishButton()
+
+/* MVP */
+
+function renderMVP(){
+
+let html=`<div class="voteBox"><h2>Vote no MVP</h2>`
+
+winnerTeam.forEach(p=>{
+
+html+=`<button class="mvpBtn">${p.nick}</button>`
+
+})
+
+html+=`</div>`
+
+document.getElementById("voteArea").innerHTML=html
+
+document.querySelectorAll(".mvpBtn").forEach(btn=>{
+
+btn.onclick=()=>voteMVP(btn.innerText)
+
+})
 
 }
 
 
-/* ================= MVP ================= */
-
-window.voteMVP=async function(player,btn){
+async function voteMVP(player){
 
 const ref=doc(db,"votes",draftId)
 
@@ -283,24 +315,44 @@ const snap=await getDoc(ref)
 
 let data=snap.data()
 
-if(data.mvpVotes?.[lolNick]) return
-
 if(!data.mvpVotes) data.mvpVotes={}
+if(data.mvpVotes[lolNick]) return
 
 data.mvpVotes[lolNick]=player
 
 await setDoc(ref,data)
 
-btn.classList.add("voted")
-
-showFinishButton()
+renderBagre()
 
 }
 
 
-/* ================= BAGRE ================= */
+/* BAGRE */
 
-window.voteBagre=async function(player,btn){
+function renderBagre(){
+
+let html=`<div class="voteBox"><h2>Vote no Bagre</h2>`
+
+loserTeam.forEach(p=>{
+
+html+=`<button class="bagreBtn">${p.nick}</button>`
+
+})
+
+html+=`</div>`
+
+document.getElementById("voteArea").innerHTML=html
+
+document.querySelectorAll(".bagreBtn").forEach(btn=>{
+
+btn.onclick=()=>voteBagre(btn.innerText)
+
+})
+
+}
+
+
+async function voteBagre(player){
 
 const ref=doc(db,"votes",draftId)
 
@@ -308,15 +360,12 @@ const snap=await getDoc(ref)
 
 let data=snap.data()
 
-if(data.bagreVotes?.[lolNick]) return
-
 if(!data.bagreVotes) data.bagreVotes={}
+if(data.bagreVotes[lolNick]) return
 
 data.bagreVotes[lolNick]=player
 
 await setDoc(ref,data)
-
-btn.classList.add("voted")
 
 showFinishButton()
 
@@ -327,28 +376,41 @@ showFinishButton()
 
 function showFinishButton(){
 
-const area=document.getElementById("voteArea")
+document.getElementById("voteArea").innerHTML=`
 
-area.innerHTML+=`
+<div class="voteBox">
 
-<br>
+<h2>Votação concluída</h2>
 
-<button class="finishBtn" onclick="finishQueue()">
+<button id="finishBtn" class="finishBtn">
 Voltar ao Menu
 </button>
 
+</div>
+
 `
+
+document.getElementById("finishBtn").onclick=finishQueue
 
 }
 
 
-window.finishQueue=async function(){
+async function finishQueue(){
+
+try{
 
 await updateDoc(doc(db,"queue","players"),{
 list:[]
 })
 
 window.location.href="menu.html"
+
+}catch(e){
+
+console.error(e)
+alert("Erro ao finalizar")
+
+}
 
 }
 
@@ -365,9 +427,9 @@ const players=snap.data().players||[]
 
 if(players.length===10){
 
-const{teamA,teamB}=balanceTeams(players)
+const{teamA:A,teamB:B}=balanceTeams(players)
 
-render(teamA,teamB)
+render(A,B)
 
 }
 
