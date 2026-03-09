@@ -36,49 +36,85 @@
         }
 
         /* Navbar */
-        nav {
-            background-color: black;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideDown 1s ease;
-        }
+        nav{
+background: linear-gradient(90deg,#000,#111);
+padding:14px 40px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+border-bottom:2px solid yellow;
+box-shadow:0 4px 15px rgba(0,0,0,0.6);
+}
 
-        .logo-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+.logo-title{
+display:flex;
+align-items:center;
+gap:12px;
+}
 
-        .logo-title img {
-            width: 40px;
-            height: 40px;
-        }
+.logo-title img{
+width:42px;
+height:42px;
+}
 
-        nav h1 {
-            color: yellow;
-            font-size: 24px;
-        }
+nav h1{
+color:yellow;
+font-size:22px;
+letter-spacing:1px;
+}
 
-        nav ul {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-        }
+.nav-links{
+list-style:none;
+display:flex;
+gap:28px;
+align-items:center;
+}
 
-        nav ul li a {
-            text-decoration: none;
-            color: yellow;
-            font-weight: bold;
-            transition: 0.3s;
-        }
+.nav-links li a{
+text-decoration:none;
+color:white;
+font-weight:600;
+transition:0.25s;
+}
 
-        nav ul li a:hover {
-            color: #ffeb3b;
-            transform: scale(1.1);
-        }
+.nav-links li a:hover{
+color:yellow;
+transform:translateY(-2px);
+}
 
+.user-area{
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+#loginBtn{
+color:white;
+text-decoration:none;
+font-weight:600;
+border:1px solid yellow;
+padding:6px 14px;
+border-radius:6px;
+transition:0.25s;
+}
+
+#loginBtn:hover{
+background:yellow;
+color:black;
+}
+
+#userNick{
+color:yellow;
+font-weight:700;
+text-decoration:none;
+padding:6px 12px;
+border-radius:6px;
+transition:0.2s;
+}
+
+#userNick:hover{
+background:rgba(255,255,0,0.1);
+}
         /* Main */
         main {
             flex: 1;
@@ -243,29 +279,47 @@
 <body>
 
 <nav>
-    <div class="logo-title">
-        <img src="logocmim.png" alt="Logo CMIM">
-        <h1>Liga CMIM</h1>
-    </div>
-    <ul>
-        <li class="dropdown">
-    <a href="queue.html">In House ▾</a>
-    <ul class="dropdown-menu">
-        <li><a href="#">Insalubrão</a></li>
-        <li><a href="#">Insalubrinho</a></li>
-        <li id="linkAdmTabela" style="display:none">
-  <a href="ADMtabela.html">Tabela ADM</a>
+
+<div class="logo-title">
+    <img src="logocmim.png" alt="Logo CMIM">
+    <h1>Liga CMIM</h1>
+</div>
+
+<ul class="nav-links">
+
+<li class="dropdown">
+<a href="queue.html">In House ▾</a>
+
+<ul class="dropdown-menu">
+<li><a href="#">Insalubrão</a></li>
+<li><a href="#">Insalubrinho</a></li>
+
+<li id="linkAdmTabela" style="display:none">
+<a href="ADMtabela.html">Tabela ADM</a>
 </li>
-        <li><a href="tabela.html">Tabela</a></li>
-        <li><a href="#">Regras</a></li>
-        <li><a href="queue.html">Queue</a></li>
-        <li><a href="selected.html">Select Player</a></li>
-    </ul>
+
+<li><a href="tabela.html">Tabela</a></li>
+<li><a href="#">Regras</a></li>
+<li><a href="queue.html">Queue</a></li>
+<li><a href="selected.html">Select Player</a></li>
+
+</ul>
 </li>
-        <li><a href="#">Liga CMIM</a></li>
-        <li><a href="#">História</a></li>
-        <li><a href="#">Contato</a></li>
-    </ul>
+
+<li><a href="#">Liga CMIM</a></li>
+<li><a href="#">História</a></li>
+<li><a href="#">Contato</a></li>
+
+</ul>
+
+<div class="user-area">
+
+<a id="loginBtn" href="login.html">Login</a>
+
+<a id="userNick" href="perfil.html" style="display:none"></a>
+
+</div>
+
 </nav>
 
 <main>
@@ -362,16 +416,29 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  const profile = snap.data();
+const nick = document.getElementById("userNick")
+const loginBtn = document.getElementById("loginBtn")
 
-  if (profile.role === "admin") {
-    document.getElementById("linkAdmTabela").style.display = "block";
-  }
+if (!user){
+loginBtn.style.display = "block"
+nick.style.display = "none"
+return
+}
+
+const snap = await getDoc(doc(db,"users",user.uid))
+const profile = snap.data()
+
+nick.innerText = profile.nick
+nick.style.display = "block"
+loginBtn.style.display = "none"
+
+if(profile.role === "admin"){
+document.getElementById("linkAdmTabela").style.display = "block"
+}
 });
 </script>
 </body>
 </html>
+
 
