@@ -260,7 +260,7 @@ const p=data.lanes[l][idx];
 if(p){
 return `
 <div class="slot">
-${p.nick}
+${p.nick} <b>[${p.tier}]</b>
 ${(isAdmin||p.uid===currentUser.uid)
 ?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
 </div>
@@ -282,7 +282,7 @@ return `<div class="slot">Vaga</div>`;
 🦁 Leão de vaga:<br>
 
 ${(data.overflow||[]).map(p=>`
-${p.nick}
+${p.nick} <b>[${p.tier}]</b>
 ${(isAdmin||p.uid===currentUser.uid)
 ?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
 `).join("<br>") || "Nenhum"}
@@ -372,6 +372,7 @@ return;
 const p={
 uid:currentUser.uid,
 nick:profile.lolNick,
+tier:profile.tier,
 lane:lane,
 joinedAt:Date.now()
 };
@@ -503,3 +504,4 @@ ready:{}
 
 </body>
 </html>
+
