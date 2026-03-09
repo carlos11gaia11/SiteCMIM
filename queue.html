@@ -1,236 +1,599 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMIM Queue</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-body{background:#f4f6f8}
-.navbar{background:#111;color:#fff;padding:16px 32px;display:flex;justify-content:space-between}
-.main{padding:40px;max-width:1100px;margin:auto}
-.queue{background:#fff;border-radius:16px;padding:24px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,.08);position:relative}
-.queue::before{content:"";position:absolute;inset:0;background:url('cmim.png') center/contain no-repeat;opacity:.04;pointer-events:none}
-.header{display:flex;justify-content:space-between;margin-bottom:16px}
-.badge{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+
+body{
+background:#f4f6f8
+}
+
+.navbar{
+background:#111;
+color:#fff;
+padding:16px 32px;
+display:flex;
+justify-content:space-between
+}
+
+.main{
+padding:40px;
+max-width:1100px;
+margin:auto
+}
+
+.queue{
+background:#fff;
+border-radius:16px;
+padding:24px;
+margin-bottom:30px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+position:relative
+}
+
+.queue::before{
+content:"";
+position:absolute;
+inset:0;
+background:url('cmim.png') center/contain no-repeat;
+opacity:.04;
+pointer-events:none
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+margin-bottom:16px
+}
+
+.badge{
+padding:6px 12px;
+border-radius:999px;
+font-size:12px;
+font-weight:600
+}
+
 .md{background:#eef2ff;color:#4338ca}
 .time{background:#e6f9f0;color:#0f9d58}
-.lanes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
-.lane{background:#f9fafb;border-radius:12px;padding:10px;border:1px solid #e5e7eb}
-.lane h3{text-align:center;font-size:13px;margin-bottom:6px}
-.slot{background:#fff;border:1px dashed #d1d5db;border-radius:8px;padding:5px;font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between}
-.overflow{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px;font-size:13px}
-.form{margin-top:12px;display:flex;gap:10px}
-select,button,input{padding:8px;border-radius:8px;border:1px solid #d1d5db}
-button{background:#111;color:#fff;font-weight:600;cursor:pointer}
-.admin{margin-top:10px;background:#111;color:#fff;padding:10px;border-radius:8px}
-.admin input,.admin select{margin-right:6px}
+
+.lanes{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:12px;
+margin-bottom:16px
+}
+
+.lane{
+background:#f9fafb;
+border-radius:12px;
+padding:10px;
+border:1px solid #e5e7eb
+}
+
+.lane h3{
+text-align:center;
+font-size:13px;
+margin-bottom:6px
+}
+
+.slot{
+background:#fff;
+border:1px dashed #d1d5db;
+border-radius:8px;
+padding:5px;
+font-size:12px;
+margin-bottom:4px;
+display:flex;
+justify-content:space-between
+}
+
+.overflow{
+background:#fffbeb;
+border:1px solid #fde68a;
+border-radius:12px;
+padding:10px;
+font-size:13px
+}
+
+.form{
+margin-top:12px;
+display:flex;
+gap:10px
+}
+
+select,button,input{
+padding:8px;
+border-radius:8px;
+border:1px solid #d1d5db
+}
+
+button{
+background:#111;
+color:#fff;
+font-weight:600;
+cursor:pointer
+}
+
+.admin{
+margin-top:10px;
+background:#111;
+color:#fff;
+padding:10px;
+border-radius:8px
+}
+
+.readyBox{
+margin-top:15px;
+text-align:center;
+font-weight:600
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="navbar">
-  <h1>CMIM Queue</h1>
-  <div id="userInfo">Carregando...</div>
+<h1>CMIM Queue</h1>
+<div id="userInfo">Carregando...</div>
 </div>
 
 <div class="main">
-  <button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">➕ Criar Nova Fila</button>
-  <div id="listaFilas"></div>
+
+<button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">
+➕ Criar Nova Fila
+</button>
+
+<div id="listaFilas"></div>
+
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+doc,
+getDoc,
+setDoc,
+updateDoc,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
- apiKey: "AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
- authDomain: "login-cmim.firebaseapp.com",
- projectId: "login-cmim"
+
+apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+authDomain:"login-cmim.firebaseapp.com",
+projectId:"login-cmim"
+
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser, profile, isAdmin=false;
+let currentUser;
+let profile;
+let isAdmin=false;
+
+
 
 onAuthStateChanged(auth, async user=>{
- if(!user){location.href="login.html";return}
- currentUser=user;
- const snap=await getDoc(doc(db,"users",user.uid));
- profile=snap.data();
- isAdmin = profile.role === "admin";
- document.getElementById("userInfo").innerText=`Logado como ${profile.lolNick}`;
- if(isAdmin) document.getElementById("btnCriarFila").style.display="block";
- carregarFilas();
+
+if(!user){
+location.href="login.html";
+return;
+}
+
+currentUser=user;
+
+const snap = await getDoc(doc(db,"users",user.uid));
+profile=snap.data();
+
+isAdmin = profile.role === "admin";
+
+document.getElementById("userInfo").innerText=
+`Logado como ${profile.lolNick}`;
+
+if(isAdmin)
+document.getElementById("btnCriarFila").style.display="block";
+
+carregarFilas();
+
 });
 
+
+
 function carregarFilas(){
- const q = collection(db,"queues");
- onSnapshot(q,snap=>{
-  const div=document.getElementById("listaFilas");
-  div.innerHTML="";
-  snap.docs.forEach(d=>renderFila(d.id,d.data(),div));
- });
+
+const q = collection(db,"queues");
+
+onSnapshot(q,snap=>{
+
+const div=document.getElementById("listaFilas");
+div.innerHTML="";
+
+snap.docs.forEach(d=>{
+
+renderFila(d.id,d.data(),div)
+
+})
+
+})
+
 }
+
+
 
 function renderFila(id,data,container){
- const div=document.createElement("div");
- div.className="queue";
 
- div.innerHTML=`
- <div class="header">
-  <div>
-   <span class="badge md">${data.formato}</span>
-   <span class="badge time">${data.horario}</span>
-  </div>
- </div>
+const div=document.createElement("div");
+div.className="queue";
 
- <div class="lanes">
- ${["top","jg","mid","adc","sup"].map(l=>`
-  <div class="lane">
-   <h3>${l.toUpperCase()}</h3>
-   ${Array.from({ length: 2 }).map((_, idx) => {
-  const p = data.lanes[l][idx];
-  return p ? `
-    <div class="slot">
-      ${p.nick}
-      ${(isAdmin || p.uid === currentUser.uid)
-        ? `<button onclick="remover('${id}','${p.uid}')">❌</button>`
-        : ""}
-    </div>
-  ` : `
-    <div class="slot">Vaga</div>
-  `;
-}).join("")}
-  </div>`).join("")}
- </div>
+const totalPlayers =
+Object.values(data.lanes).flat().length;
 
- <div class="overflow">
-  🦁 Leão de vaga:<br>
-  ${(data.overflow||[]).map(p=>`
-   ${p.nick}
-   ${(isAdmin||p.uid===currentUser.uid)?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
-  `).join("<br>") || "Nenhum"}
- </div>
+const readyCount =
+data.ready ? Object.keys(data.ready).length : 0;
 
- <form class="form" onsubmit="event.preventDefault();entrar('${id}')">
-  <select required id="lane_${id}">
-   <option value="">Lane</option>
-   <option value="top">Top</option>
-   <option value="jg">JG</option>
-   <option value="mid">Mid</option>
-   <option value="adc">ADC</option>
-   <option value="sup">Sup</option>
-  </select>
-  <button>Entrar</button>
- </form>
+div.innerHTML=`
 
- ${isAdmin?`
- <div class="admin">
-  <input placeholder="Horário" id="h_${id}">
-  <select id="f_${id}">
-   <option>MD1</option>
-   <option>MD3</option>
-   <option>MD5</option>
-  </select>
-  <button onclick="salvar('${id}')">Salvar</button>
- </div>`:""}
- `;
- container.appendChild(div);
+<div class="header">
+
+<div>
+
+<span class="badge md">${data.formato}</span>
+
+<span class="badge time">${data.horario}</span>
+
+</div>
+
+</div>
+
+
+
+<div class="lanes">
+
+${["top","jg","mid","adc","sup"].map(l=>`
+
+<div class="lane">
+
+<h3>${l.toUpperCase()}</h3>
+
+${Array.from({length:2}).map((_,idx)=>{
+
+const p=data.lanes[l][idx];
+
+if(p){
+
+return `
+
+<div class="slot">
+
+${p.nick}
+
+${(isAdmin||p.uid===currentUser.uid)
+
+?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+
+</div>
+
+`;
+
 }
+
+return `<div class="slot">Vaga</div>`;
+
+}).join("")}
+
+</div>
+
+`).join("")}
+
+</div>
+
+
+
+<div class="overflow">
+
+🦁 Leão de vaga:<br>
+
+${(data.overflow||[]).map(p=>`
+
+${p.nick}
+
+${(isAdmin||p.uid===currentUser.uid)
+
+?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+
+`).join("<br>") || "Nenhum"}
+
+</div>
+
+
+
+<form class="form" onsubmit="event.preventDefault();entrar('${id}')">
+
+<select required id="lane_${id}">
+
+<option value="">Lane</option>
+
+<option value="top">Top</option>
+
+<option value="jg">JG</option>
+
+<option value="mid">Mid</option>
+
+<option value="adc">ADC</option>
+
+<option value="sup">Sup</option>
+
+</select>
+
+<button>Entrar</button>
+
+</form>
+
+
+
+<div class="readyBox">
+
+${totalPlayers===10 ?
+
+(
+
+!data.ready || !data.ready[currentUser.uid]
+
+?
+
+`<button onclick="readyPlayer('${id}')">✅ READY</button>`
+
+:
+
+readyCount===10
+
+?
+
+`<button onclick="startQueue('${id}')">🚀 IR PARA QUEUE</button>`
+
+:
+
+`${readyCount}/10 jogadores prontos`
+
+)
+
+:""}
+
+</div>
+
+
+
+${isAdmin?`
+
+<div class="admin">
+
+<input placeholder="Horário" id="h_${id}">
+
+<select id="f_${id}">
+
+<option>MD1</option>
+
+<option>MD3</option>
+
+<option>MD5</option>
+
+</select>
+
+<button onclick="salvar('${id}')">Salvar</button>
+
+</div>
+
+`:""}
+
+`;
+
+container.appendChild(div);
+
+}
+
+
 
 window.entrar=async(id)=>{
- const lane=document.getElementById("lane_"+id).value;
- const ref=doc(db,"queues",id);
- const snap=await getDoc(ref);
- const d=snap.data();
 
- if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))return;
+const lane=document.getElementById("lane_"+id).value;
 
- const p = {
-  uid: currentUser.uid,
-  nick: profile.lolNick,
-  lane: lane,
-  joinedAt: Date.now() // ⏱️ ordem real da fila
+const ref=doc(db,"queues",id);
+
+const snap=await getDoc(ref);
+
+const d=snap.data();
+
+
+
+if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))
+return;
+
+
+
+const p={
+
+uid:currentUser.uid,
+nick:profile.lolNick,
+lane:lane,
+joinedAt:Date.now()
+
 };
 
-if (d.lanes[lane].length < 2) {
-  d.lanes[lane].push(p);
-} else {
-  d.overflow.push(p);
+
+
+if(d.lanes[lane].length<2){
+
+d.lanes[lane].push(p);
+
+}else{
+
+d.overflow.push(p);
+
 }
 
 
- await updateDoc(ref,{lanes:d.lanes,overflow:d.overflow});
+
+await updateDoc(ref,{
+lanes:d.lanes,
+overflow:d.overflow
+});
+
 };
 
-window.remover = async (id, uid) => {
-  const ref = doc(db, "queues", id);
-  const snap = await getDoc(ref);
-  const d = snap.data();
 
-  let laneComVaga = null;
 
-  // 1️⃣ Remove jogador das lanes e identifica onde abriu vaga
-  for (const l in d.lanes) {
-    const antes = d.lanes[l].length;
-    d.lanes[l] = d.lanes[l].filter(p => p.uid !== uid);
+window.readyPlayer=async(id)=>{
 
-    if (antes === 2 && d.lanes[l].length === 1) {
-      laneComVaga = l;
-    }
-  }
+const ref=doc(db,"queues",id);
 
-  // 2️⃣ Remove do overflow (caso esteja lá)
-  d.overflow = d.overflow.filter(p => p.uid !== uid);
+const snap=await getDoc(ref);
 
-  // 3️⃣ 🦁 Sobe SOMENTE quem pediu essa lane
-  if (laneComVaga) {
-    const index = d.overflow.findIndex(p => p.lane === laneComVaga);
+const d=snap.data();
 
-    if (index !== -1) {
-      const [proximo] = d.overflow.splice(index, 1);
-      d.lanes[laneComVaga].push(proximo);
-    }
-  }
+if(!d.ready)
+d.ready={};
 
-  await updateDoc(ref, {
-    lanes: d.lanes,
-    overflow: d.overflow
-  });
+d.ready[currentUser.uid]=true;
+
+await updateDoc(ref,{ready:d.ready});
+
 };
+
+
+
+window.startQueue=async(id)=>{
+
+await updateDoc(doc(db,"queues",id),{
+status:"iniciando"
+});
+
+alert("Todos prontos! Iniciando partida.");
+
+};
+
+
+
+window.remover=async(id,uid)=>{
+
+const ref=doc(db,"queues",id);
+
+const snap=await getDoc(ref);
+
+const d=snap.data();
+
+let laneComVaga=null;
+
+
+
+for(const l in d.lanes){
+
+const antes=d.lanes[l].length;
+
+d.lanes[l]=d.lanes[l].filter(p=>p.uid!==uid);
+
+if(antes===2 && d.lanes[l].length===1)
+laneComVaga=l;
+
+}
+
+
+
+d.overflow=d.overflow.filter(p=>p.uid!==uid);
+
+
+
+if(laneComVaga){
+
+const index=d.overflow.findIndex(p=>p.lane===laneComVaga);
+
+if(index!==-1){
+
+const [proximo]=d.overflow.splice(index,1);
+
+d.lanes[laneComVaga].push(proximo);
+
+}
+
+}
+
+
+
+await updateDoc(ref,{
+lanes:d.lanes,
+overflow:d.overflow
+});
+
+};
+
+
 
 window.salvar=async(id)=>{
- const h=document.getElementById("h_"+id).value;
- const f=document.getElementById("f_"+id).value;
- await updateDoc(doc(db,"queues",id),{horario:h,formato:f});
+
+const h=document.getElementById("h_"+id).value;
+
+const f=document.getElementById("f_"+id).value;
+
+await updateDoc(doc(db,"queues",id),{
+horario:h,
+formato:f
+});
+
 };
+
+
 
 window.criarFila=async()=>{
- const horario=prompt("Horário da fila:");
- const formato=prompt("Formato (MD1, MD3, MD5):");
- if(!horario||!formato)return;
 
- await setDoc(doc(collection(db,"queues")),{
-  horario,formato,status:"aberta",
-  criadaEm:new Date(),
-  lanes:{top:[],jg:[],mid:[],adc:[],sup:[]},
-  overflow:[]
- });
+const horario=prompt("Horário da fila:");
+
+const formato=prompt("Formato (MD1, MD3, MD5):");
+
+if(!horario||!formato)return;
+
+await setDoc(doc(collection(db,"queues")),{
+
+horario,
+formato,
+status:"aberta",
+
+criadaEm:new Date(),
+
+lanes:{
+top:[],
+jg:[],
+mid:[],
+adc:[],
+sup:[]
+},
+
+overflow:[],
+
+ready:{}
+
+});
+
 };
+
 </script>
 
 </body>
 </html>
-
-
-
-
-
