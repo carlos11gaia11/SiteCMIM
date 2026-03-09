@@ -72,6 +72,17 @@ font-size:13px;
 margin-bottom:6px
 }
 
+  .removeBtn{
+background:#ef4444;
+border:none;
+color:#fff;
+font-size:11px;
+padding:2px 6px;
+border-radius:6px;
+cursor:pointer;
+line-height:1;
+}
+
 .slot{
 background:#fff;
 border:1px dashed #d1d5db;
@@ -251,7 +262,7 @@ if(p){
 return `
 <div class="slot">
 ${p.nick} <b>[${p.tier}]</b>
-<button onclick="remover('${id}','${p.uid}')">❌</button>
+<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
 </div>
 `;
 }
@@ -272,7 +283,7 @@ return `<div class="slot">Vaga</div>`;
 
 ${(data.overflow||[]).map(p=>`
 ${p.nick} <b>[${p.tier}]</b>
-<button onclick="remover('${id}','${p.uid}')">❌</button>
+<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
 `).join("<br>") || "Nenhum"}
 
 </div>
@@ -462,3 +473,4 @@ ready:{}
 
 </body>
 </html>
+
