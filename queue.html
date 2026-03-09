@@ -10,6 +10,7 @@
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+
 body{background:#f4f6f8}
 
 .navbar{
@@ -31,31 +32,99 @@ background:#fff;
 border-radius:16px;
 padding:24px;
 margin-bottom:30px;
-box-shadow:0 10px 30px rgba(0,0,0,.08)
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+position:relative
 }
 
-.adminScheduler{
-background:#fff;
+.header{
+display:flex;
+justify-content:space-between;
+margin-bottom:16px
+}
+
+.badge{
+padding:6px 12px;
+border-radius:999px;
+font-size:12px;
+font-weight:600
+}
+
+.md{background:#eef2ff;color:#4338ca}
+.time{background:#e6f9f0;color:#0f9d58}
+
+.lanes{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:12px;
+margin-bottom:16px
+}
+
+.lane{
+background:#f9fafb;
 border-radius:12px;
-padding:20px;
-margin-bottom:25px;
-box-shadow:0 10px 30px rgba(0,0,0,.08)
+padding:10px;
+border:1px solid #e5e7eb
+}
+
+.lane h3{
+text-align:center;
+font-size:13px;
+margin-bottom:6px
+}
+
+  .removeBtn{
+background:#ef4444;
+border:none;
+color:#fff;
+font-size:11px;
+padding:2px 6px;
+border-radius:6px;
+cursor:pointer;
+line-height:1;
+}
+
+.slot{
+background:#fff;
+border:1px dashed #d1d5db;
+border-radius:8px;
+padding:5px;
+font-size:12px;
+margin-bottom:4px;
+display:flex;
+justify-content:space-between
+}
+
+.overflow{
+background:#fffbeb;
+border:1px solid #fde68a;
+border-radius:12px;
+padding:10px;
+font-size:13px
+}
+
+.form{
+margin-top:12px;
+display:flex;
+gap:10px
+}
+
+select,button,input{
+padding:8px;
+border-radius:8px;
+border:1px solid #d1d5db
 }
 
 button{
 background:#111;
 color:#fff;
 font-weight:600;
-cursor:pointer;
-border:none;
-padding:8px 14px;
-border-radius:8px
+cursor:pointer
 }
 
-input,select{
-padding:8px;
-border-radius:8px;
-border:1px solid #d1d5db
+.readyBox{
+margin-top:15px;
+text-align:center;
+font-weight:600
 }
 
 </style>
@@ -70,9 +139,7 @@ border:1px solid #d1d5db
 
 <div class="main">
 
-<div id="adminScheduler"></div>
-
-<button id="btnCriarFila" style="display:none;margin-bottom:20px">
+<button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">
 ➕ Criar Nova Fila
 </button>
 
@@ -83,23 +150,8 @@ border:1px solid #d1d5db
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-getFirestore,
-collection,
-doc,
-getDoc,
-setDoc,
-updateDoc,
-onSnapshot,
-addDoc,
-getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import { 
-getAuth,
-onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
@@ -114,9 +166,7 @@ const auth = getAuth(app);
 let currentUser;
 let profile;
 let isAdmin=false;
-
-
-/* LOGIN */
+let redirecting=false;
 
 onAuthStateChanged(auth, async user=>{
 
@@ -138,154 +188,15 @@ profile=snap.data();
 
 isAdmin = profile.role === "admin";
 
-document.getElementById("userInfo").innerText =
+document.getElementById("userInfo").innerText=
 `Logado como ${profile.lolNick}`;
 
-
-/* ADMIN */
-
-if(isAdmin){
-
+if(isAdmin)
 document.getElementById("btnCriarFila").style.display="block";
-
-document.getElementById("btnCriarFila").onclick = criarFila;
-
-document.getElementById("adminScheduler").innerHTML=`
-
-<div class="adminScheduler">
-
-<h3>Programar fila automática</h3>
-
-<input type="time" id="horaFila">
-
-<select id="formatoFila">
-<option>MD1</option>
-<option>MD3</option>
-<option>MD5</option>
-</select>
-
-<button id="btnAgendar">Agendar Fila</button>
-
-</div>
-
-`;
-
-document.getElementById("btnAgendar").onclick = agendarFila;
-
-}
 
 carregarFilas();
 
-setInterval(verificarFilasAgendadas,60000);
-
 });
-
-
-/* CRIAR FILA */
-
-async function criarFila(){
-
-await addDoc(collection(db,"queues"),{
-
-horario:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
-
-formato:"MD3",
-status:"aberta",
-
-lanes:{
-top:[],
-jg:[],
-mid:[],
-adc:[],
-sup:[]
-},
-
-overflow:[],
-ready:{}
-
-});
-
-alert("Fila criada!");
-
-}
-
-
-/* AGENDAR FILA */
-
-async function agendarFila(){
-
-const hora=document.getElementById("horaFila").value;
-const formato=document.getElementById("formatoFila").value;
-
-if(!hora){
-alert("Escolha um horário");
-return;
-}
-
-await addDoc(collection(db,"scheduledQueues"),{
-
-horario:hora,
-formato:formato,
-ativo:true,
-executadoHoje:null
-
-});
-
-alert("Fila programada!");
-
-}
-
-
-/* VERIFICAR FILAS AGENDADAS */
-
-async function verificarFilasAgendadas(){
-
-const agora=new Date();
-
-const horaAtual=agora.toTimeString().slice(0,5);
-const hoje=agora.toISOString().slice(0,10);
-
-const snap=await getDocs(collection(db,"scheduledQueues"));
-
-snap.forEach(async fila=>{
-
-const data=fila.data();
-
-if(!data.ativo) return;
-
-if(data.horario===horaAtual && data.executadoHoje!==hoje){
-
-await addDoc(collection(db,"queues"),{
-
-horario:data.horario,
-formato:data.formato,
-status:"aberta",
-
-lanes:{
-top:[],
-jg:[],
-mid:[],
-adc:[],
-sup:[]
-},
-
-overflow:[],
-ready:{}
-
-});
-
-await updateDoc(doc(db,"scheduledQueues",fila.id),{
-executadoHoje:hoje
-});
-
-}
-
-});
-
-}
-
-
-/* LISTAR FILAS */
 
 function carregarFilas(){
 
@@ -297,29 +208,267 @@ const div=document.getElementById("listaFilas");
 div.innerHTML="";
 
 snap.docs.forEach(d=>{
+renderFila(d.id,d.data(),div)
+})
 
-const data=d.data();
+})
 
-const box=document.createElement("div");
-box.className="queue";
+}
 
-box.innerHTML=`
+function renderFila(id,data,container){
 
-<h3>Fila ${data.formato}</h3>
+if(data.status==="draft" && data.draftId){
 
-<p>Horário: ${data.horario}</p>
+const players = Object.values(data.lanes).flat();
 
-<p>Status: ${data.status}</p>
+if(players.some(p=>p.uid===currentUser.uid) && !redirecting){
+redirecting=true;
+window.location.href=`draft2.html?draft=${data.draftId}`;
+}
+
+}
+
+const div=document.createElement("div");
+div.className="queue";
+
+const totalPlayers =
+Object.values(data.lanes).flat().length;
+
+const readyCount =
+data.ready ? Object.keys(data.ready).length : 0;
+
+div.innerHTML=`
+
+<div class="header">
+<div>
+<span class="badge md">${data.formato}</span>
+<span class="badge time">${data.horario}</span>
+</div>
+</div>
+
+<div class="lanes">
+
+${["top","jg","mid","adc","sup"].map(l=>`
+
+<div class="lane">
+
+<h3>${l.toUpperCase()}</h3>
+
+${Array.from({length:2}).map((_,idx)=>{
+
+const p=data.lanes[l][idx];
+
+if(p){
+return `
+<div class="slot">
+${p.nick} <b>[${p.tier}]</b>
+<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
+</div>
+`;
+}
+
+return `<div class="slot">Vaga</div>`;
+
+}).join("")}
+
+</div>
+
+`).join("")}
+
+</div>
+
+<div class="overflow">
+
+🦁 Leão de vaga:<br>
+
+${(data.overflow||[]).map(p=>`
+${p.nick} <b>[${p.tier}]</b>
+${p.nick} <b>[${p.tier}]</b> (${p.lane.toUpperCase()})
+<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
+`).join("<br>") || "Nenhum"}
+
+</div>
+
+<form class="form" onsubmit="event.preventDefault();entrar('${id}')">
+
+<select required id="lane_${id}">
+<option value="">Lane</option>
+<option value="top">Top</option>
+<option value="jg">JG</option>
+<option value="mid">Mid</option>
+<option value="adc">ADC</option>
+<option value="sup">Sup</option>
+</select>
+
+<button>Entrar</button>
+
+</form>
+
+<div class="readyBox">
+
+${totalPlayers===10 ?
+
+(
+
+!data.ready || !data.ready[currentUser.uid]
+
+?
+
+`<button onclick="readyPlayer('${id}')">✅ READY</button>`
+
+:
+
+readyCount===10
+
+?
+
+`<button onclick="startQueue('${id}')">🚀 Iniciar Partida</button>`
+
+:
+
+`${readyCount}/10 jogadores prontos`
+
+)
+
+:""}
+
+</div>
 
 `;
 
-div.appendChild(box);
-
-});
-
-});
+container.appendChild(div);
 
 }
+
+window.entrar=async(id)=>{
+
+const lane=document.getElementById("lane_"+id).value;
+
+if(!lane){
+alert("Escolha uma lane");
+return;
+}
+
+const ref=doc(db,"queues",id);
+const snap=await getDoc(ref);
+const d=snap.data();
+
+if(!d.overflow) d.overflow=[];
+
+if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))
+return;
+
+const p={
+uid:currentUser.uid,
+nick:profile.lolNick,
+tier:profile.tier,
+lane:lane,
+joinedAt:Date.now()
+};
+
+if(d.lanes[lane].length<2){
+d.lanes[lane].push(p);
+}else{
+d.overflow.push(p);
+}
+
+await updateDoc(ref,{
+lanes:d.lanes,
+overflow:d.overflow
+});
+
+};
+
+window.readyPlayer=async(id)=>{
+
+const ref=doc(db,"queues",id);
+const snap=await getDoc(ref);
+const d=snap.data();
+
+if(!d.ready) d.ready={};
+
+d.ready[currentUser.uid]=true;
+
+await updateDoc(ref,{ready:d.ready});
+
+};
+
+window.startQueue = async(id)=>{
+
+const ref = doc(db,"queues",id);
+const snap = await getDoc(ref);
+const data = snap.data();
+
+const players = Object.values(data.lanes).flat();
+
+const draftRef = await addDoc(collection(db,"drafts"),{
+
+queueId:id,
+players:players,
+createdAt:Date.now(),
+status:"draft"
+
+});
+
+await updateDoc(ref,{
+status:"draft",
+draftId:draftRef.id
+});
+
+alert("Partida criada!");
+
+};
+
+window.remover=async(id,uid)=>{
+
+const ref=doc(db,"queues",id);
+const snap=await getDoc(ref);
+const d=snap.data();
+
+for(const l in d.lanes){
+d.lanes[l]=d.lanes[l].filter(p=>p.uid!==uid);
+}
+
+d.overflow=(d.overflow||[]).filter(p=>p.uid!==uid);
+
+if(d.ready && d.ready[uid])
+delete d.ready[uid];
+
+await updateDoc(ref,{
+lanes:d.lanes,
+overflow:d.overflow,
+ready:d.ready||{}
+});
+
+};
+
+window.criarFila=async()=>{
+
+const horario=prompt("Horário da fila:");
+const formato=prompt("Formato (MD1, MD3, MD5):");
+
+if(!horario||!formato)return;
+
+await setDoc(doc(collection(db,"queues")),{
+
+horario,
+formato,
+status:"aberta",
+
+lanes:{
+top:[],
+jg:[],
+mid:[],
+adc:[],
+sup:[]
+},
+
+overflow:[],
+ready:{}
+
+});
+
+};
 
 </script>
 
