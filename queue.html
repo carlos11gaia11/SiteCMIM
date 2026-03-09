@@ -172,6 +172,7 @@ const auth = getAuth(app);
 let currentUser;
 let profile;
 let isAdmin=false;
+let redirecting=false;
 
 onAuthStateChanged(auth, async user=>{
 
@@ -183,6 +184,12 @@ return;
 currentUser=user;
 
 const snap=await getDoc(doc(db,"users",user.uid));
+
+if(!snap.exists()){
+alert("Perfil não encontrado.");
+return;
+}
+
 profile=snap.data();
 
 isAdmin = profile.role === "admin";
@@ -216,12 +223,12 @@ renderFila(d.id,d.data(),div)
 
 function renderFila(id,data,container){
 
-// redirecionar apenas quem está na fila
 if(data.status==="draft"){
 
 const players = Object.values(data.lanes).flat();
 
-if(players.some(p=>p.uid===currentUser.uid)){
+if(players.some(p=>p.uid===currentUser.uid) && !redirecting){
+redirecting=true;
 window.location.href="draft2.html";
 }
 
@@ -267,7 +274,7 @@ ${(isAdmin||p.uid===currentUser.uid)
 `;
 }
 
-return `<div class="slot">Vaga</div>`;
+return `<div class="slot">Vaga livre</div>`;
 
 }).join("")}
 
@@ -362,12 +369,19 @@ window.entrar=async(id)=>{
 
 const lane=document.getElementById("lane_"+id).value;
 
+if(!lane){
+alert("Escolha uma lane");
+return;
+}
+
 const ref=doc(db,"queues",id);
 const snap=await getDoc(ref);
 const d=snap.data();
 
 if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))
 return;
+
+if(!d.overflow) d.overflow=[];
 
 const p={
 uid:currentUser.uid,
@@ -396,8 +410,7 @@ const ref=doc(db,"queues",id);
 const snap=await getDoc(ref);
 const d=snap.data();
 
-if(!d.ready)
-d.ready={};
+if(!d.ready) d.ready={};
 
 d.ready[currentUser.uid]=true;
 
@@ -436,7 +449,11 @@ laneComVaga=l;
 
 }
 
-d.overflow=d.overflow.filter(p=>p.uid!==uid);
+d.overflow=(d.overflow||[]).filter(p=>p.uid!==uid);
+
+if(d.ready && d.ready[uid]){
+delete d.ready[uid];
+}
 
 if(laneComVaga){
 
@@ -453,7 +470,8 @@ d.lanes[laneComVaga].push(proximo);
 
 await updateDoc(ref,{
 lanes:d.lanes,
-overflow:d.overflow
+overflow:d.overflow,
+ready:d.ready||{}
 });
 
 };
@@ -504,4 +522,3 @@ ready:{}
 
 </body>
 </html>
-
