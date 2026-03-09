@@ -106,7 +106,7 @@ font-size:18px;
 
 <header>
 CMIM <span>Draft</span>
-<div>Sistema Automático</div>
+<div id="roomInfo">Sala</div>
 </header>
 
 <div class="container">
@@ -136,7 +136,7 @@ CMIM <span>Draft</span>
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
@@ -146,6 +146,21 @@ projectId:"login-cmim"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+
+/* PEGAR ID DO DRAFT */
+
+const params = new URLSearchParams(window.location.search);
+const draftId = params.get("draft");
+
+if(!draftId){
+alert("Sala inválida");
+}
+
+document.getElementById("roomInfo").innerText = "Sala: " + draftId;
+
+
+/* VALOR DOS TIERS */
 
 const tierValues={
 "S":12,
@@ -159,18 +174,22 @@ const tierValues={
 "F":4
 };
 
+
+/* BALANCEAR TIMES */
+
 function balanceTeams(players){
 
 players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier]);
 
 const teamA=[];
 const teamB=[];
+
 let scoreA=0;
 let scoreB=0;
 
 players.forEach(p=>{
 
-const value=tierValues[p.tier]||0;
+const value = tierValues[p.tier] || 0;
 
 if(scoreA<=scoreB){
 teamA.push(p);
@@ -186,6 +205,9 @@ return {teamA,teamB,scoreA,scoreB};
 
 }
 
+
+/* RENDER */
+
 function render(teamA,teamB,scoreA,scoreB){
 
 const divA=document.getElementById("teamA");
@@ -195,6 +217,7 @@ divA.innerHTML="";
 divB.innerHTML="";
 
 teamA.forEach(p=>{
+
 divA.innerHTML+=`
 <div class="player">
 <div>
@@ -204,9 +227,11 @@ ${p.nick}
 <div class="tier">${p.tier}</div>
 </div>
 `;
+
 });
 
 teamB.forEach(p=>{
+
 divB.innerHTML+=`
 <div class="player">
 <div>
@@ -216,6 +241,7 @@ ${p.nick}
 <div class="tier">${p.tier}</div>
 </div>
 `;
+
 });
 
 document.getElementById("overallA").innerText="Overall: "+scoreA;
@@ -228,49 +254,26 @@ document.getElementById("balanceInfo").innerText=
 
 }
 
-function getPlayersFromQueue(queue){
 
-const players=[];
+/* ESCUTAR SALA DO DRAFT */
 
-Object.values(queue.lanes).forEach(laneArr=>{
+const draftRef = doc(db,"drafts",draftId);
 
-laneArr.forEach(p=>{
-players.push({
-nick:p.nick,
-lane:p.lane,
-tier:p.tier || "C"
-});
-});
+onSnapshot(draftRef,(snap)=>{
 
-});
+if(!snap.exists()) return;
 
-return players;
+const data = snap.data();
 
-}
-
-const q=collection(db,"queues");
-
-onSnapshot(q,snap=>{
-
-snap.docs.forEach(doc=>{
-
-const data=doc.data();
-
-if(data.status==="draft"){
-
-const players=getPlayersFromQueue(data);
+const players = data.players || [];
 
 if(players.length===10){
 
-const {teamA,teamB,scoreA,scoreB}=balanceTeams(players);
+const {teamA,teamB,scoreA,scoreB} = balanceTeams(players);
 
 render(teamA,teamB,scoreA,scoreB);
 
 }
-
-}
-
-});
 
 });
 
