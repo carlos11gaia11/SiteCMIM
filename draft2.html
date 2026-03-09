@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CMIM Draft</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+font-family:Inter;
+background:white;
+margin:0;
+color:#111;
+}
+
+header{
+background:black;
+color:white;
+padding:18px 30px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-weight:800;
+letter-spacing:1px;
+}
+
+header span{
+color:#FFD000;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:40px 20px;
+}
+
+.title{
+font-size:32px;
+font-weight:800;
+margin-bottom:30px;
+}
+
+.teams{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:30px;
+}
+
+.team{
+border:3px solid #FFD000;
+border-radius:16px;
+padding:20px;
+background:#fafafa;
+box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.team h2{
+margin-top:0;
+font-size:22px;
+border-bottom:2px solid #FFD000;
+padding-bottom:8px;
+}
+
+.player{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:white;
+border:1px solid #eee;
+padding:10px 12px;
+border-radius:8px;
+margin-bottom:8px;
+font-weight:600;
+}
+
+.lane{
+font-size:12px;
+color:#666;
+}
+
+.tier{
+font-weight:800;
+color:#FFD000;
+}
+
+.overall{
+margin-top:12px;
+font-size:18px;
+font-weight:800;
+}
+
+.balance{
+margin-top:30px;
+font-weight:700;
+font-size:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+CMIM <span>Draft</span>
+<div>Sistema Automático</div>
+</header>
+
+<div class="container">
+
+<div class="title">Times Balanceados</div>
+
+<div class="teams">
+
+<div class="team">
+<h2>Time A</h2>
+<div id="teamA"></div>
+<div class="overall" id="overallA"></div>
+</div>
+
+<div class="team">
+<h2>Time B</h2>
+<div id="teamB"></div>
+<div class="overall" id="overallB"></div>
+</div>
+
+</div>
+
+<div class="balance" id="balanceInfo"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
+authDomain:"login-cmim.firebaseapp.com",
+projectId:"login-cmim"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const tierValues={
+"S":12,
+"A+":11,
+"A":10,
+"A-":9,
+"B":8,
+"C":7,
+"D":6,
+"E":5,
+"F":4
+};
+
+function balanceTeams(players){
+
+players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier]);
+
+const teamA=[];
+const teamB=[];
+let scoreA=0;
+let scoreB=0;
+
+players.forEach(p=>{
+
+const value=tierValues[p.tier]||0;
+
+if(scoreA<=scoreB){
+teamA.push(p);
+scoreA+=value;
+}else{
+teamB.push(p);
+scoreB+=value;
+}
+
+});
+
+return {teamA,teamB,scoreA,scoreB};
+
+}
+
+function render(teamA,teamB,scoreA,scoreB){
+
+const divA=document.getElementById("teamA");
+const divB=document.getElementById("teamB");
+
+divA.innerHTML="";
+divB.innerHTML="";
+
+teamA.forEach(p=>{
+divA.innerHTML+=`
+<div class="player">
+<div>
+${p.nick}
+<div class="lane">${p.lane}</div>
+</div>
+<div class="tier">${p.tier}</div>
+</div>
+`;
+});
+
+teamB.forEach(p=>{
+divB.innerHTML+=`
+<div class="player">
+<div>
+${p.nick}
+<div class="lane">${p.lane}</div>
+</div>
+<div class="tier">${p.tier}</div>
+</div>
+`;
+});
+
+document.getElementById("overallA").innerText="Overall: "+scoreA;
+document.getElementById("overallB").innerText="Overall: "+scoreB;
+
+const diff=Math.abs(scoreA-scoreB);
+
+document.getElementById("balanceInfo").innerText=
+"Balanceamento diferença: "+diff;
+
+}
+
+function getPlayersFromQueue(queue){
+
+const players=[];
+
+Object.values(queue.lanes).forEach(laneArr=>{
+
+laneArr.forEach(p=>{
+players.push({
+nick:p.nick,
+lane:p.lane,
+tier:p.tier || "C"
+});
+});
+
+});
+
+return players;
+
+}
+
+const q=collection(db,"queues");
+
+onSnapshot(q,snap=>{
+
+snap.docs.forEach(doc=>{
+
+const data=doc.data();
+
+if(data.status==="draft"){
+
+const players=getPlayersFromQueue(data);
+
+if(players.length===10){
+
+const {teamA,teamB,scoreA,scoreB}=balanceTeams(players);
+
+render(teamA,teamB,scoreA,scoreB);
+
+}
+
+}
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
