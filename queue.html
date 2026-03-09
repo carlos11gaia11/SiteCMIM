@@ -36,15 +36,6 @@ box-shadow:0 10px 30px rgba(0,0,0,.08);
 position:relative
 }
 
-.queue::before{
-content:"";
-position:absolute;
-inset:0;
-background:url('cmim.png') center/contain no-repeat;
-opacity:.04;
-pointer-events:none
-}
-
 .header{
 display:flex;
 justify-content:space-between;
@@ -119,14 +110,6 @@ font-weight:600;
 cursor:pointer
 }
 
-.admin{
-margin-top:10px;
-background:#111;
-color:#fff;
-padding:10px;
-border-radius:8px
-}
-
 .readyBox{
 margin-top:15px;
 text-align:center;
@@ -156,7 +139,7 @@ font-weight:600
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -186,7 +169,7 @@ currentUser=user;
 const snap=await getDoc(doc(db,"users",user.uid));
 
 if(!snap.exists()){
-alert("Perfil não encontrado.");
+alert("Perfil não encontrado");
 return;
 }
 
@@ -223,13 +206,13 @@ renderFila(d.id,d.data(),div)
 
 function renderFila(id,data,container){
 
-if(data.status==="draft"){
+if(data.status==="draft" && data.draftId){
 
 const players = Object.values(data.lanes).flat();
 
 if(players.some(p=>p.uid===currentUser.uid) && !redirecting){
 redirecting=true;
-window.location.href="draft2.html";
+window.location.href=`draft2.html?draft=${data.draftId}`;
 }
 
 }
@@ -268,13 +251,12 @@ if(p){
 return `
 <div class="slot">
 ${p.nick} <b>[${p.tier}]</b>
-${(isAdmin||p.uid===currentUser.uid)
-?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+<button onclick="remover('${id}','${p.uid}')">❌</button>
 </div>
 `;
 }
 
-return `<div class="slot">Vaga livre</div>`;
+return `<div class="slot">Vaga</div>`;
 
 }).join("")}
 
@@ -290,8 +272,7 @@ return `<div class="slot">Vaga livre</div>`;
 
 ${(data.overflow||[]).map(p=>`
 ${p.nick} <b>[${p.tier}]</b>
-${(isAdmin||p.uid===currentUser.uid)
-?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
+<button onclick="remover('${id}','${p.uid}')">❌</button>
 `).join("<br>") || "Nenhum"}
 
 </div>
@@ -329,7 +310,7 @@ readyCount===10
 
 ?
 
-`<button onclick="startQueue('${id}')">🚀 IR PARA QUEUE</button>`
+`<button onclick="startQueue('${id}')">🚀 Iniciar Partida</button>`
 
 :
 
@@ -340,24 +321,6 @@ readyCount===10
 :""}
 
 </div>
-
-${isAdmin?`
-
-<div class="admin">
-
-<input placeholder="Horário" id="h_${id}">
-
-<select id="f_${id}">
-<option>MD1</option>
-<option>MD3</option>
-<option>MD5</option>
-</select>
-
-<button onclick="salvar('${id}')">Salvar</button>
-
-</div>
-
-`:""}
 
 `;
 
@@ -378,10 +341,10 @@ const ref=doc(db,"queues",id);
 const snap=await getDoc(ref);
 const d=snap.data();
 
+if(!d.overflow) d.overflow=[];
+
 if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))
 return;
-
-if(!d.overflow) d.overflow=[];
 
 const p={
 uid:currentUser.uid,
@@ -421,12 +384,26 @@ await updateDoc(ref,{ready:d.ready});
 window.startQueue = async(id)=>{
 
 const ref = doc(db,"queues",id);
+const snap = await getDoc(ref);
+const data = snap.data();
 
-await updateDoc(ref,{
+const players = Object.values(data.lanes).flat();
+
+const draftRef = await addDoc(collection(db,"drafts"),{
+
+queueId:id,
+players:players,
+createdAt:Date.now(),
 status:"draft"
+
 });
 
-alert("Todos prontos! Iniciando partida.");
+await updateDoc(ref,{
+status:"draft",
+draftId:draftRef.id
+});
+
+alert("Partida criada!");
 
 };
 
@@ -436,54 +413,19 @@ const ref=doc(db,"queues",id);
 const snap=await getDoc(ref);
 const d=snap.data();
 
-let laneComVaga=null;
-
 for(const l in d.lanes){
-
-const antes=d.lanes[l].length;
-
 d.lanes[l]=d.lanes[l].filter(p=>p.uid!==uid);
-
-if(antes===2 && d.lanes[l].length===1)
-laneComVaga=l;
-
 }
 
 d.overflow=(d.overflow||[]).filter(p=>p.uid!==uid);
 
-if(d.ready && d.ready[uid]){
+if(d.ready && d.ready[uid])
 delete d.ready[uid];
-}
-
-if(laneComVaga){
-
-const index=d.overflow.findIndex(p=>p.lane===laneComVaga);
-
-if(index!==-1){
-
-const [proximo]=d.overflow.splice(index,1);
-d.lanes[laneComVaga].push(proximo);
-
-}
-
-}
 
 await updateDoc(ref,{
 lanes:d.lanes,
 overflow:d.overflow,
 ready:d.ready||{}
-});
-
-};
-
-window.salvar=async(id)=>{
-
-const h=document.getElementById("h_"+id).value;
-const f=document.getElementById("f_"+id).value;
-
-await updateDoc(doc(db,"queues",id),{
-horario:h,
-formato:f
 });
 
 };
@@ -500,8 +442,6 @@ await setDoc(doc(collection(db,"queues")),{
 horario,
 formato,
 status:"aberta",
-
-criadaEm:new Date(),
 
 lanes:{
 top:[],
