@@ -25,7 +25,6 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 font-weight:800;
-letter-spacing:1px;
 }
 
 header span{
@@ -36,12 +35,6 @@ color:#FFD000;
 max-width:1200px;
 margin:auto;
 padding:40px 20px;
-}
-
-.title{
-font-size:32px;
-font-weight:800;
-margin-bottom:30px;
 }
 
 .teams{
@@ -55,36 +48,13 @@ border:3px solid #FFD000;
 border-radius:16px;
 padding:20px;
 background:#fafafa;
-box-shadow:0 8px 20px rgba(0,0,0,.08);
-}
-
-.team h2{
-margin-top:0;
-font-size:22px;
-border-bottom:2px solid #FFD000;
-padding-bottom:8px;
 }
 
 .player{
 display:flex;
 justify-content:space-between;
-align-items:center;
-background:white;
-border:1px solid #eee;
-padding:10px 12px;
-border-radius:8px;
-margin-bottom:8px;
-font-weight:600;
-}
-
-.lane{
-font-size:12px;
-color:#666;
-}
-
-.tier{
-font-weight:800;
-color:#FFD000;
+padding:10px;
+border-bottom:1px solid #eee;
 }
 
 .voteBox{
@@ -102,11 +72,20 @@ padding:12px 18px;
 margin:6px;
 border-radius:8px;
 cursor:pointer;
-font-weight:700;
+transition:.2s;
 }
 
 button:hover{
-opacity:.85;
+opacity:.8;
+}
+
+button.voted{
+background:#27ae60;
+}
+
+.counter{
+font-weight:700;
+margin-bottom:10px;
 }
 
 </style>
@@ -116,12 +95,10 @@ opacity:.85;
 
 <header>
 CMIM <span>Draft</span>
-<div id="roomInfo">Sala</div>
+<div id="roomInfo"></div>
 </header>
 
 <div class="container">
-
-<div class="title">Times Balanceados</div>
 
 <div class="teams">
 
@@ -151,287 +128,323 @@ doc,
 onSnapshot,
 updateDoc,
 setDoc,
-collection
+getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
 authDomain:"login-cmim.firebaseapp.com",
 projectId:"login-cmim"
-};
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig)
+const db=getFirestore(app)
 
-const params = new URLSearchParams(window.location.search);
-const draftId = params.get("draft");
+const params=new URLSearchParams(window.location.search)
+const draftId=params.get("draft")
 
-document.getElementById("roomInfo").innerText="Sala: "+draftId;
+document.getElementById("roomInfo").innerText="Sala: "+draftId
 
-/* VALOR TIERS */
+/* pegar nick */
+
+const lolNick=params.get("nick")
+
+/* tiers */
 
 const tierValues={
-"S":12,
-"A+":11,
-"A":10,
-"A-":9,
-"B":8,
-"C":7,
-"D":6,
-"E":5,
-"F":4
-};
+"S":12,"A+":11,"A":10,"A-":9,"B":8,"C":7,"D":6,"E":5,"F":4
+}
 
-/* BALANCEAMENTO SNAKE */
+/* balanceamento */
 
 function balanceTeams(players){
 
-players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier]);
+players.sort((a,b)=>tierValues[b.tier]-tierValues[a.tier])
 
-const teamA=[];
-const teamB=[];
+const teamA=[]
+const teamB=[]
 
 players.forEach((p,i)=>{
 
-if(i%4===0 || i%4===3){
-teamA.push(p);
+if(i%4===0||i%4===3){
+teamA.push(p)
 }else{
-teamB.push(p);
+teamB.push(p)
 }
 
-});
+})
 
-return {teamA,teamB};
+return{teamA,teamB}
 
 }
 
-/* RENDER TIMES */
+/* render */
 
 function render(teamA,teamB){
 
-const divA=document.getElementById("teamA");
-const divB=document.getElementById("teamB");
+const divA=document.getElementById("teamA")
+const divB=document.getElementById("teamB")
 
-divA.innerHTML="";
-divB.innerHTML="";
+divA.innerHTML=""
+divB.innerHTML=""
 
 teamA.forEach(p=>{
-
-divA.innerHTML+=`
-<div class="player">
-<div>
-${p.nick}
-<div class="lane">${p.lane}</div>
-</div>
-<div class="tier">${p.tier}</div>
-</div>
-`;
-
-});
+divA.innerHTML+=`<div class="player">${p.nick}</div>`
+})
 
 teamB.forEach(p=>{
+divB.innerHTML+=`<div class="player">${p.nick}</div>`
+})
 
-divB.innerHTML+=`
-<div class="player">
-<div>
-${p.nick}
-<div class="lane">${p.lane}</div>
-</div>
-<div class="tier">${p.tier}</div>
-</div>
-`;
-
-});
-
-renderVote(teamA,teamB)
+renderResultVote(teamA,teamB)
 
 }
 
-/* RESULTADO */
+/* ================= RESULTADO ================= */
 
-function renderVote(teamA,teamB){
+async function renderResultVote(teamA,teamB){
 
-const voteArea=document.getElementById("voteArea");
-
-voteArea.innerHTML=`
+document.getElementById("voteArea").innerHTML=`
 
 <div class="voteBox">
 
-<h2>Resultado da Série</h2>
+<h2>Resultado</h2>
 
-<button onclick="voteWinner('A')">Time A venceu</button>
-<button onclick="voteWinner('B')">Time B venceu</button>
+<div id="resultCount" class="counter">0 / 5 votos</div>
 
-<br><br>
-
-<button onclick="voteScore('2-0')">2-0</button>
-<button onclick="voteScore('2-1')">2-1</button>
+<button onclick="voteResult('A',this)">Time A venceu</button>
+<button onclick="voteResult('B',this)">Time B venceu</button>
 
 </div>
 
 `
 
-window.voteWinner=(team)=>{
+}
 
-window.winner=team
+window.voteResult=async function(team,btn){
 
-renderMVP(teamA,teamB)
+const ref=doc(db,"votes",draftId)
+
+const snap=await getDoc(ref)
+
+let data=snap.exists()?snap.data():{resultVotes:{}}
+
+if(data.resultVotes[lolNick]) return
+
+data.resultVotes[lolNick]=team
+
+await setDoc(ref,data)
+
+btn.classList.add("voted")
+
+updateResultVotes()
 
 }
 
-window.voteScore=(score)=>{
+async function updateResultVotes(){
 
-window.score=score
+const snap=await getDoc(doc(db,"votes",draftId))
+
+if(!snap.exists()) return
+
+const votes=snap.data().resultVotes||{}
+
+const total=Object.keys(votes).length
+
+document.getElementById("resultCount").innerText=total+" / 5 votos"
+
+if(total>=5){
+
+const counts={}
+
+Object.values(votes).forEach(v=>{
+counts[v]=(counts[v]||0)+1
+})
+
+window.winner=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b)
+
+renderMVP()
 
 }
 
 }
 
-/* SISTEMA DE VOTAÇÃO */
+/* ================= MVP ================= */
 
-let voteCount=0
-let mvpVotes={}
-let bagreVotes={}
+async function renderMVP(){
 
-let winnerTeam=[]
-let loserTeam=[]
-
-function renderMVP(teamA,teamB){
-
-winnerTeam = window.winner==="A" ? teamA : teamB
-loserTeam = window.winner==="A" ? teamB : teamA
-
-let html=`
+document.getElementById("voteArea").innerHTML=`
 
 <div class="voteBox">
 
 <h2>Vote no MVP</h2>
 
-<p id="voteCount">Votos: 0 / 5</p>
+<div id="mvpCount" class="counter">0 / 5 votos</div>
+
+</div>
 
 `
 
-winnerTeam.forEach(p=>{
+}
 
-html+=`<button onclick="voteMVP('${p.nick}')">${p.nick}</button>`
+window.voteMVP=async function(player,btn){
 
+const ref=doc(db,"votes",draftId)
+
+const snap=await getDoc(ref)
+
+let data=snap.data()
+
+if(data.mvpVotes?.[lolNick]) return
+
+if(!data.mvpVotes) data.mvpVotes={}
+
+data.mvpVotes[lolNick]=player
+
+await setDoc(ref,data)
+
+btn.classList.add("voted")
+
+updateMVPVotes()
+
+}
+
+async function updateMVPVotes(){
+
+const snap=await getDoc(doc(db,"votes",draftId))
+
+const votes=snap.data().mvpVotes||{}
+
+const total=Object.keys(votes).length
+
+document.getElementById("mvpCount").innerText=total+" / 5 votos"
+
+if(total>=5){
+
+const counts={}
+
+Object.values(votes).forEach(v=>{
+counts[v]=(counts[v]||0)+1
 })
 
-html+=`<h2>Vote no Bagre</h2>`
+window.mvp=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b)
 
-loserTeam.forEach(p=>{
+renderBagre()
 
-html+=`<button onclick="voteBagre('${p.nick}')">${p.nick}</button>`
+}
 
+}
+
+/* ================= BAGRE ================= */
+
+async function renderBagre(){
+
+document.getElementById("voteArea").innerHTML=`
+
+<div class="voteBox">
+
+<h2>Vote no Bagre</h2>
+
+<div id="bagreCount" class="counter">0 / 5 votos</div>
+
+</div>
+
+`
+
+}
+
+window.voteBagre=async function(player,btn){
+
+const ref=doc(db,"votes",draftId)
+
+const snap=await getDoc(ref)
+
+let data=snap.data()
+
+if(data.bagreVotes?.[lolNick]) return
+
+if(!data.bagreVotes) data.bagreVotes={}
+
+data.bagreVotes[lolNick]=player
+
+await setDoc(ref,data)
+
+btn.classList.add("voted")
+
+updateBagreVotes()
+
+}
+
+async function updateBagreVotes(){
+
+const snap=await getDoc(doc(db,"votes",draftId))
+
+const votes=snap.data().bagreVotes||{}
+
+const total=Object.keys(votes).length
+
+document.getElementById("bagreCount").innerText=total+" / 5 votos"
+
+if(total>=5){
+
+const counts={}
+
+Object.values(votes).forEach(v=>{
+counts[v]=(counts[v]||0)+1
 })
 
-html+=`<div id="resultArea"></div>`
+window.bagre=Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b)
 
-html+=`</div>`
-
-document.getElementById("voteArea").innerHTML=html
-
-}
-
-window.voteMVP=(nick)=>{
-
-if(!mvpVotes[nick]) mvpVotes[nick]=0
-mvpVotes[nick]++
-
-checkVote()
-
-}
-
-window.voteBagre=(nick)=>{
-
-if(!bagreVotes[nick]) bagreVotes[nick]=0
-bagreVotes[nick]++
-
-checkVote()
-
-}
-
-function checkVote(){
-
-voteCount++
-
-document.getElementById("voteCount").innerText="Votos: "+voteCount+" / 5"
-
-if(voteCount>=5){
-
-calculateResult()
+showFinish()
 
 }
 
 }
 
-function calculateResult(){
+/* FINAL */
 
-let mvp = Object.keys(mvpVotes).reduce((a,b)=>mvpVotes[a]>mvpVotes[b]?a:b)
+function showFinish(){
 
-let bagre = Object.keys(bagreVotes).reduce((a,b)=>bagreVotes[a]>bagreVotes[b]?a:b)
+document.getElementById("voteArea").innerHTML=`
 
-window.mvp=mvp
-window.bagre=bagre
+<div class="voteBox">
 
-let html=`
+<h2>Resultado Final</h2>
 
-<h2>Resultado da votação</h2>
-
-<p><b>MVP:</b> ${mvp}</p>
-
-<p><b>Bagre:</b> ${bagre}</p>
-
-<br>
+<p>MVP: <b>${window.mvp}</b></p>
+<p>Bagre: <b>${window.bagre}</b></p>
 
 <button onclick="finishQueue()">Finalizar Queue</button>
 
-`
+</div>
 
-document.getElementById("resultArea").innerHTML=html
+`
 
 }
 
-/* FINALIZAR */
-
-window.finishQueue = async function(){
-
-await setDoc(doc(collection(db,"results")),{
-
-draft:draftId,
-winner:window.winner,
-score:window.score,
-mvp:window.mvp,
-bagre:window.bagre,
-time:Date.now()
-
-})
+window.finishQueue=async function(){
 
 await updateDoc(doc(db,"queue","players"),{
-
 list:[]
-
 })
-
-alert("Partida registrada!")
 
 window.location.href="menu.html"
 
 }
 
-/* ESCUTAR DRAFT */
+/* listener */
 
-const draftRef = doc(db,"drafts",draftId)
+const draftRef=doc(db,"drafts",draftId)
 
 onSnapshot(draftRef,(snap)=>{
 
 if(!snap.exists()) return
 
-const players = snap.data().players || []
+const players=snap.data().players||[]
 
 if(players.length===10){
 
-const {teamA,teamB}=balanceTeams(players)
+const{teamA,teamB}=balanceTeams(players)
 
 render(teamA,teamB)
 
