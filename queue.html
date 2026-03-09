@@ -282,7 +282,7 @@ return `<div class="slot">Vaga</div>`;
 🦁 Leão de vaga:<br>
 
 ${(data.overflow||[]).map(p=>`
-${p.nick} <b>[${p.tier}]</b>
+${p.nick} <b>[${p.tier}]</b> (${p.lane.toUpperCase()})
 <button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
 `).join("<br>") || "Nenhum"}
 
@@ -473,4 +473,5 @@ ready:{}
 
 </body>
 </html>
+
 
