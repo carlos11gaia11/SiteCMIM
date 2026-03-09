@@ -11,9 +11,7 @@
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
 
-body{
-background:#f4f6f8
-}
+body{background:#f4f6f8}
 
 .navbar{
 background:#111;
@@ -158,28 +156,13 @@ font-weight:600
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-doc,
-getDoc,
-setDoc,
-updateDoc,
-onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import {
-getAuth,
-onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
 authDomain:"login-cmim.firebaseapp.com",
 projectId:"login-cmim"
-
 };
 
 const app = initializeApp(firebaseConfig);
@@ -190,8 +173,6 @@ let currentUser;
 let profile;
 let isAdmin=false;
 
-
-
 onAuthStateChanged(auth, async user=>{
 
 if(!user){
@@ -201,7 +182,7 @@ return;
 
 currentUser=user;
 
-const snap = await getDoc(doc(db,"users",user.uid));
+const snap=await getDoc(doc(db,"users",user.uid));
 profile=snap.data();
 
 isAdmin = profile.role === "admin";
@@ -216,8 +197,6 @@ carregarFilas();
 
 });
 
-
-
 function carregarFilas(){
 
 const q = collection(db,"queues");
@@ -228,27 +207,28 @@ const div=document.getElementById("listaFilas");
 div.innerHTML="";
 
 snap.docs.forEach(d=>{
-
 renderFila(d.id,d.data(),div)
-
 })
 
 })
 
 }
 
-
-
 function renderFila(id,data,container){
 
-  if(data.status === "draft"){
- window.location.href = "draft2.html";
+// redirecionar apenas quem está na fila
+if(data.status==="draft"){
+
+const players = Object.values(data.lanes).flat();
+
+if(players.some(p=>p.uid===currentUser.uid)){
+window.location.href="draft2.html";
+}
+
 }
 
 const div=document.createElement("div");
 div.className="queue";
-
-  
 
 const totalPlayers =
 Object.values(data.lanes).flat().length;
@@ -259,18 +239,11 @@ data.ready ? Object.keys(data.ready).length : 0;
 div.innerHTML=`
 
 <div class="header">
-
 <div>
-
 <span class="badge md">${data.formato}</span>
-
 <span class="badge time">${data.horario}</span>
-
 </div>
-
 </div>
-
-
 
 <div class="lanes">
 
@@ -285,21 +258,13 @@ ${Array.from({length:2}).map((_,idx)=>{
 const p=data.lanes[l][idx];
 
 if(p){
-
 return `
-
 <div class="slot">
-
 ${p.nick}
-
 ${(isAdmin||p.uid===currentUser.uid)
-
 ?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
-
 </div>
-
 `;
-
 }
 
 return `<div class="slot">Vaga</div>`;
@@ -312,49 +277,32 @@ return `<div class="slot">Vaga</div>`;
 
 </div>
 
-
-
 <div class="overflow">
 
 🦁 Leão de vaga:<br>
 
 ${(data.overflow||[]).map(p=>`
-
 ${p.nick}
-
 ${(isAdmin||p.uid===currentUser.uid)
-
 ?`<button onclick="remover('${id}','${p.uid}')">❌</button>`:""}
-
 `).join("<br>") || "Nenhum"}
 
 </div>
 
-
-
 <form class="form" onsubmit="event.preventDefault();entrar('${id}')">
 
 <select required id="lane_${id}">
-
 <option value="">Lane</option>
-
 <option value="top">Top</option>
-
 <option value="jg">JG</option>
-
 <option value="mid">Mid</option>
-
 <option value="adc">ADC</option>
-
 <option value="sup">Sup</option>
-
 </select>
 
 <button>Entrar</button>
 
 </form>
-
-
 
 <div class="readyBox">
 
@@ -386,8 +334,6 @@ readyCount===10
 
 </div>
 
-
-
 ${isAdmin?`
 
 <div class="admin">
@@ -395,13 +341,9 @@ ${isAdmin?`
 <input placeholder="Horário" id="h_${id}">
 
 <select id="f_${id}">
-
 <option>MD1</option>
-
 <option>MD3</option>
-
 <option>MD5</option>
-
 </select>
 
 <button onclick="salvar('${id}')">Salvar</button>
@@ -416,47 +358,29 @@ container.appendChild(div);
 
 }
 
-
-
 window.entrar=async(id)=>{
 
 const lane=document.getElementById("lane_"+id).value;
 
 const ref=doc(db,"queues",id);
-
 const snap=await getDoc(ref);
-
 const d=snap.data();
-
-
 
 if(Object.values(d.lanes).flat().some(p=>p.uid===currentUser.uid))
 return;
 
-
-
 const p={
-
 uid:currentUser.uid,
 nick:profile.lolNick,
 lane:lane,
 joinedAt:Date.now()
-
 };
 
-
-
 if(d.lanes[lane].length<2){
-
 d.lanes[lane].push(p);
-
 }else{
-
 d.overflow.push(p);
-
 }
-
-
 
 await updateDoc(ref,{
 lanes:d.lanes,
@@ -465,14 +389,10 @@ overflow:d.overflow
 
 };
 
-
-
 window.readyPlayer=async(id)=>{
 
 const ref=doc(db,"queues",id);
-
 const snap=await getDoc(ref);
-
 const d=snap.data();
 
 if(!d.ready)
@@ -484,35 +404,25 @@ await updateDoc(ref,{ready:d.ready});
 
 };
 
-
-
 window.startQueue = async(id)=>{
 
- const ref = doc(db,"queues",id);
+const ref = doc(db,"queues",id);
 
- await updateDoc(ref,{
-  status:"draft"
- });
-
-};
+await updateDoc(ref,{
+status:"draft"
+});
 
 alert("Todos prontos! Iniciando partida.");
 
 };
 
-
-
 window.remover=async(id,uid)=>{
 
 const ref=doc(db,"queues",id);
-
 const snap=await getDoc(ref);
-
 const d=snap.data();
 
 let laneComVaga=null;
-
-
 
 for(const l in d.lanes){
 
@@ -525,11 +435,7 @@ laneComVaga=l;
 
 }
 
-
-
 d.overflow=d.overflow.filter(p=>p.uid!==uid);
-
-
 
 if(laneComVaga){
 
@@ -538,14 +444,11 @@ const index=d.overflow.findIndex(p=>p.lane===laneComVaga);
 if(index!==-1){
 
 const [proximo]=d.overflow.splice(index,1);
-
 d.lanes[laneComVaga].push(proximo);
 
 }
 
 }
-
-
 
 await updateDoc(ref,{
 lanes:d.lanes,
@@ -554,12 +457,9 @@ overflow:d.overflow
 
 };
 
-
-
 window.salvar=async(id)=>{
 
 const h=document.getElementById("h_"+id).value;
-
 const f=document.getElementById("f_"+id).value;
 
 await updateDoc(doc(db,"queues",id),{
@@ -569,12 +469,9 @@ formato:f
 
 };
 
-
-
 window.criarFila=async()=>{
 
 const horario=prompt("Horário da fila:");
-
 const formato=prompt("Formato (MD1, MD3, MD5):");
 
 if(!horario||!formato)return;
@@ -596,7 +493,6 @@ sup:[]
 },
 
 overflow:[],
-
 ready:{}
 
 });
@@ -607,4 +503,3 @@ ready:{}
 
 </body>
 </html>
-
