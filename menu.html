@@ -444,26 +444,28 @@ nick.style.display="none"
 return
 }
 
-const ref=doc(db,"users",user.uid)
-const snap=await getDoc(ref)
+const ref = doc(db,"users",user.uid)
+const snap = await getDoc(ref)
 
-let nome="Player"
+let nome = "Player"
 
 if(snap.exists()){
-const data=snap.data()
 
-nome=data.nick || data.username || user.email
+const data = snap.data()
 
-if(data.role==="admin"){
-document.getElementById("linkAdmTabela").style.display="block"
-}
-}else{
-nome=user.email
+if(data.lolnick){
+nome = data.lolnick
 }
 
-nick.innerText=nome
-nick.style.display="block"
-loginBtn.style.display="none"
+if(data.role === "admin"){
+document.getElementById("linkAdmTabela").style.display = "block"
+}
+
+}
+
+nick.innerText = nome
+nick.style.display = "block"
+loginBtn.style.display = "none"
 
 })
 
@@ -471,3 +473,4 @@ loginBtn.style.display="none"
 
 </body>
 </html>
+
