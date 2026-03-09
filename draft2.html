@@ -88,16 +88,13 @@ color:#FFD000;
 }
 
 .voteBox{
-
 margin-top:40px;
 border:3px solid black;
 padding:25px;
 border-radius:12px;
-
 }
 
 button{
-
 background:black;
 color:white;
 border:none;
@@ -106,7 +103,6 @@ margin:6px;
 border-radius:8px;
 cursor:pointer;
 font-weight:700;
-
 }
 
 button:hover{
@@ -132,13 +128,11 @@ CMIM <span>Draft</span>
 <div class="team">
 <h2>Time A</h2>
 <div id="teamA"></div>
-<div id="overallA"></div>
 </div>
 
 <div class="team">
 <h2>Time B</h2>
 <div id="teamB"></div>
-<div id="overallB"></div>
 </div>
 
 </div>
@@ -160,30 +154,23 @@ setDoc,
 collection
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 const firebaseConfig = {
-
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
 authDomain:"login-cmim.firebaseapp.com",
 projectId:"login-cmim"
-
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 
 const params = new URLSearchParams(window.location.search);
 const draftId = params.get("draft");
 
 document.getElementById("roomInfo").innerText="Sala: "+draftId;
 
-
-
 /* VALOR TIERS */
 
 const tierValues={
-
 "S":12,
 "A+":11,
 "A":10,
@@ -193,12 +180,9 @@ const tierValues={
 "D":6,
 "E":5,
 "F":4
-
 };
 
-
-
-/* BALANCEAMENTO SNAKE DRAFT */
+/* BALANCEAMENTO SNAKE */
 
 function balanceTeams(players){
 
@@ -220,8 +204,6 @@ teamB.push(p);
 return {teamA,teamB};
 
 }
-
-
 
 /* RENDER TIMES */
 
@@ -265,9 +247,7 @@ renderVote(teamA,teamB)
 
 }
 
-
-
-/* VOTAÇÃO */
+/* RESULTADO */
 
 function renderVote(teamA,teamB){
 
@@ -293,30 +273,43 @@ voteArea.innerHTML=`
 
 window.voteWinner=(team)=>{
 
-window.winner=team;
+window.winner=team
 
-renderMVP(teamA,teamB);
+renderMVP(teamA,teamB)
 
 }
 
 window.voteScore=(score)=>{
 
-window.score=score;
+window.score=score
 
 }
 
 }
 
+/* SISTEMA DE VOTAÇÃO */
 
+let voteCount=0
+let mvpVotes={}
+let bagreVotes={}
 
-/* MVP + BAGRE */
+let winnerTeam=[]
+let loserTeam=[]
 
 function renderMVP(teamA,teamB){
 
-let winnerTeam = window.winner==="A" ? teamA : teamB
-let loserTeam = window.winner==="A" ? teamB : teamA
+winnerTeam = window.winner==="A" ? teamA : teamB
+loserTeam = window.winner==="A" ? teamB : teamA
 
-let html=`<div class="voteBox"><h2>MVP</h2>`
+let html=`
+
+<div class="voteBox">
+
+<h2>Vote no MVP</h2>
+
+<p id="voteCount">Votos: 0 / 5</p>
+
+`
 
 winnerTeam.forEach(p=>{
 
@@ -324,7 +317,7 @@ html+=`<button onclick="voteMVP('${p.nick}')">${p.nick}</button>`
 
 })
 
-html+=`<h2>Bagre</h2>`
+html+=`<h2>Vote no Bagre</h2>`
 
 loserTeam.forEach(p=>{
 
@@ -332,35 +325,76 @@ html+=`<button onclick="voteBagre('${p.nick}')">${p.nick}</button>`
 
 })
 
+html+=`<div id="resultArea"></div>`
+
 html+=`</div>`
 
-document.getElementById("voteArea").innerHTML=html;
+document.getElementById("voteArea").innerHTML=html
+
+}
 
 window.voteMVP=(nick)=>{
 
-window.mvp=nick
+if(!mvpVotes[nick]) mvpVotes[nick]=0
+mvpVotes[nick]++
 
-checkFinish()
+checkVote()
 
 }
 
 window.voteBagre=(nick)=>{
 
-window.bagre=nick
+if(!bagreVotes[nick]) bagreVotes[nick]=0
+bagreVotes[nick]++
 
-checkFinish()
+checkVote()
+
+}
+
+function checkVote(){
+
+voteCount++
+
+document.getElementById("voteCount").innerText="Votos: "+voteCount+" / 5"
+
+if(voteCount>=5){
+
+calculateResult()
 
 }
 
 }
 
+function calculateResult(){
 
+let mvp = Object.keys(mvpVotes).reduce((a,b)=>mvpVotes[a]>mvpVotes[b]?a:b)
+
+let bagre = Object.keys(bagreVotes).reduce((a,b)=>bagreVotes[a]>bagreVotes[b]?a:b)
+
+window.mvp=mvp
+window.bagre=bagre
+
+let html=`
+
+<h2>Resultado da votação</h2>
+
+<p><b>MVP:</b> ${mvp}</p>
+
+<p><b>Bagre:</b> ${bagre}</p>
+
+<br>
+
+<button onclick="finishQueue()">Finalizar Queue</button>
+
+`
+
+document.getElementById("resultArea").innerHTML=html
+
+}
 
 /* FINALIZAR */
 
-async function checkFinish(){
-
-if(!window.mvp || !window.bagre || !window.score) return
+window.finishQueue = async function(){
 
 await setDoc(doc(collection(db,"results")),{
 
@@ -373,25 +407,21 @@ time:Date.now()
 
 })
 
-/* RESET QUEUE */
-
 await updateDoc(doc(db,"queue","players"),{
 
 list:[]
 
 })
 
-alert("Votação concluída!")
+alert("Partida registrada!")
 
-window.location.href="home.html"
+window.location.href="menu.html"
 
 }
 
-
-
 /* ESCUTAR DRAFT */
 
-const draftRef = doc(db,"drafts",draftId);
+const draftRef = doc(db,"drafts",draftId)
 
 onSnapshot(draftRef,(snap)=>{
 
