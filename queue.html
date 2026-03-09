@@ -10,7 +10,6 @@
 <style>
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-
 body{background:#f4f6f8}
 
 .navbar{
@@ -32,99 +31,7 @@ background:#fff;
 border-radius:16px;
 padding:24px;
 margin-bottom:30px;
-box-shadow:0 10px 30px rgba(0,0,0,.08);
-position:relative
-}
-
-.header{
-display:flex;
-justify-content:space-between;
-margin-bottom:16px
-}
-
-.badge{
-padding:6px 12px;
-border-radius:999px;
-font-size:12px;
-font-weight:600
-}
-
-.md{background:#eef2ff;color:#4338ca}
-.time{background:#e6f9f0;color:#0f9d58}
-
-.lanes{
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:12px;
-margin-bottom:16px
-}
-
-.lane{
-background:#f9fafb;
-border-radius:12px;
-padding:10px;
-border:1px solid #e5e7eb
-}
-
-.lane h3{
-text-align:center;
-font-size:13px;
-margin-bottom:6px
-}
-
-.removeBtn{
-background:#ef4444;
-border:none;
-color:#fff;
-font-size:11px;
-padding:2px 6px;
-border-radius:6px;
-cursor:pointer;
-line-height:1;
-}
-
-.slot{
-background:#fff;
-border:1px dashed #d1d5db;
-border-radius:8px;
-padding:5px;
-font-size:12px;
-margin-bottom:4px;
-display:flex;
-justify-content:space-between
-}
-
-.overflow{
-background:#fffbeb;
-border:1px solid #fde68a;
-border-radius:12px;
-padding:10px;
-font-size:13px
-}
-
-.form{
-margin-top:12px;
-display:flex;
-gap:10px
-}
-
-select,button,input{
-padding:8px;
-border-radius:8px;
-border:1px solid #d1d5db
-}
-
-button{
-background:#111;
-color:#fff;
-font-weight:600;
-cursor:pointer
-}
-
-.readyBox{
-margin-top:15px;
-text-align:center;
-font-weight:600
+box-shadow:0 10px 30px rgba(0,0,0,.08)
 }
 
 .adminScheduler{
@@ -133,6 +40,22 @@ border-radius:12px;
 padding:20px;
 margin-bottom:25px;
 box-shadow:0 10px 30px rgba(0,0,0,.08)
+}
+
+button{
+background:#111;
+color:#fff;
+font-weight:600;
+cursor:pointer;
+border:none;
+padding:8px 14px;
+border-radius:8px
+}
+
+input,select{
+padding:8px;
+border-radius:8px;
+border:1px solid #d1d5db
 }
 
 </style>
@@ -149,7 +72,7 @@ box-shadow:0 10px 30px rgba(0,0,0,.08)
 
 <div id="adminScheduler"></div>
 
-<button id="btnCriarFila" style="display:none;margin-bottom:20px" onclick="criarFila()">
+<button id="btnCriarFila" style="display:none;margin-bottom:20px">
 ➕ Criar Nova Fila
 </button>
 
@@ -160,8 +83,23 @@ box-shadow:0 10px 30px rgba(0,0,0,.08)
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+getFirestore,
+collection,
+doc,
+getDoc,
+setDoc,
+updateDoc,
+onSnapshot,
+addDoc,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import { 
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 
 const firebaseConfig = {
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
@@ -176,7 +114,9 @@ const auth = getAuth(app);
 let currentUser;
 let profile;
 let isAdmin=false;
-let redirecting=false;
+
+
+/* LOGIN */
 
 onAuthStateChanged(auth, async user=>{
 
@@ -198,12 +138,17 @@ profile=snap.data();
 
 isAdmin = profile.role === "admin";
 
-document.getElementById("userInfo").innerText=
+document.getElementById("userInfo").innerText =
 `Logado como ${profile.lolNick}`;
+
+
+/* ADMIN */
 
 if(isAdmin){
 
 document.getElementById("btnCriarFila").style.display="block";
+
+document.getElementById("btnCriarFila").onclick = criarFila;
 
 document.getElementById("adminScheduler").innerHTML=`
 
@@ -219,71 +164,63 @@ document.getElementById("adminScheduler").innerHTML=`
 <option>MD5</option>
 </select>
 
-<button onclick="agendarFila()">Agendar Fila</button>
+<button id="btnAgendar">Agendar Fila</button>
 
 </div>
 
 `;
 
+document.getElementById("btnAgendar").onclick = agendarFila;
+
 }
 
 carregarFilas();
 
+setInterval(verificarFilasAgendadas,60000);
+
 });
 
-function carregarFilas(){
 
-const q = collection(db,"queues");
+/* CRIAR FILA */
 
-onSnapshot(q,snap=>{
+async function criarFila(){
 
-const div=document.getElementById("listaFilas");
-div.innerHTML="";
+await addDoc(collection(db,"queues"),{
 
-snap.docs.forEach(d=>{
-renderFila(d.id,d.data(),div)
-})
+horario:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
 
-})
+formato:"MD3",
+status:"aberta",
 
-}
+lanes:{
+top:[],
+jg:[],
+mid:[],
+adc:[],
+sup:[]
+},
 
-function renderFila(id,data,container){
+overflow:[],
+ready:{}
 
-if(data.status==="draft" && data.draftId){
+});
 
-const players = Object.values(data.lanes).flat();
-
-if(players.some(p=>p.uid===currentUser.uid) && !redirecting){
-redirecting=true;
-window.location.href=`draft2.html?draft=${data.draftId}`;
-}
-
-}
-
-const div=document.createElement("div");
-div.className="queue";
-
-const totalPlayers =
-Object.values(data.lanes).flat().length;
-
-const readyCount =
-data.ready ? Object.keys(data.ready).length : 0;
-
-div.innerHTML=`...` /* mantive exatamente sua estrutura */
-
-container.appendChild(div);
+alert("Fila criada!");
 
 }
+
 
 /* AGENDAR FILA */
 
-window.agendarFila=async()=>{
+async function agendarFila(){
 
 const hora=document.getElementById("horaFila").value;
 const formato=document.getElementById("formatoFila").value;
 
-if(!hora)return alert("Escolha um horário");
+if(!hora){
+alert("Escolha um horário");
+return;
+}
 
 await addDoc(collection(db,"scheduledQueues"),{
 
@@ -296,11 +233,10 @@ executadoHoje:null
 
 alert("Fila programada!");
 
-};
+}
 
-/* VERIFICAR FILAS AUTOMATICAS */
 
-setInterval(verificarFilasAgendadas,60000);
+/* VERIFICAR FILAS AGENDADAS */
 
 async function verificarFilasAgendadas(){
 
@@ -311,15 +247,15 @@ const hoje=agora.toISOString().slice(0,10);
 
 const snap=await getDocs(collection(db,"scheduledQueues"));
 
-snap.forEach(async docu=>{
+snap.forEach(async fila=>{
 
-const data=docu.data();
+const data=fila.data();
 
-if(!data.ativo)return;
+if(!data.ativo) return;
 
 if(data.horario===horaAtual && data.executadoHoje!==hoje){
 
-await setDoc(doc(collection(db,"queues")),{
+await addDoc(collection(db,"queues"),{
 
 horario:data.horario,
 formato:data.formato,
@@ -338,11 +274,48 @@ ready:{}
 
 });
 
-await updateDoc(doc(db,"scheduledQueues",docu.id),{
+await updateDoc(doc(db,"scheduledQueues",fila.id),{
 executadoHoje:hoje
 });
 
 }
+
+});
+
+}
+
+
+/* LISTAR FILAS */
+
+function carregarFilas(){
+
+const q = collection(db,"queues");
+
+onSnapshot(q,snap=>{
+
+const div=document.getElementById("listaFilas");
+div.innerHTML="";
+
+snap.docs.forEach(d=>{
+
+const data=d.data();
+
+const box=document.createElement("div");
+box.className="queue";
+
+box.innerHTML=`
+
+<h3>Fila ${data.formato}</h3>
+
+<p>Horário: ${data.horario}</p>
+
+<p>Status: ${data.status}</p>
+
+`;
+
+div.appendChild(box);
+
+});
 
 });
 
