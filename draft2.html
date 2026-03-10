@@ -88,12 +88,6 @@ button.voted{
 background:#27ae60;
 }
 
-.finishBtn{
-background:#FFD000;
-color:black;
-font-weight:800;
-}
-
 </style>
 </head>
 
@@ -113,7 +107,7 @@ CMIM <span>Draft</span>
 <div class="team">
 <h2>Time A</h2>
 
-<div v-for="p in teamA" class="player">
+<div v-for="p in teamA" :key="p.nick" class="player">
 <span>{{p.nick}}</span>
 <span class="lane">{{p.lane}}</span>
 </div>
@@ -123,7 +117,7 @@ CMIM <span>Draft</span>
 <div class="team">
 <h2>Time B</h2>
 
-<div v-for="p in teamB" class="player">
+<div v-for="p in teamB" :key="p.nick" class="player">
 <span>{{p.nick}}</span>
 <span class="lane">{{p.lane}}</span>
 </div>
@@ -132,21 +126,41 @@ CMIM <span>Draft</span>
 
 </div>
 
-
 <div class="voteBox">
 
 <h2>Resultado</h2>
 
-<button @click="voteResult('A')">Time A venceu</button>
-<button @click="voteResult('B')">Time B venceu</button>
+<button 
+@click="voteResult('A')" 
+:class="{voted:voted.result}"
+>
+Time A venceu
+</button>
+
+<button 
+@click="voteResult('B')" 
+:class="{voted:voted.result}"
+>
+Time B venceu
+</button>
 
 <br><br>
 
-<button @click="voteScore('2-0')">2-0</button>
-<button @click="voteScore('2-1')">2-1</button>
+<button 
+@click="voteScore('2-0')" 
+:class="{voted:voted.score}"
+>
+2-0
+</button>
+
+<button 
+@click="voteScore('2-1')" 
+:class="{voted:voted.score}"
+>
+2-1
+</button>
 
 </div>
-
 
 <div class="voteBox">
 
@@ -154,13 +168,14 @@ CMIM <span>Draft</span>
 
 <button
 v-for="p in allPlayers"
+:key="p.nick"
 @click="voteMVP(p.nick)"
+:class="{voted:voted.mvp}"
 >
 {{p.nick}}
 </button>
 
 </div>
-
 
 <div class="voteBox">
 
@@ -168,7 +183,9 @@ v-for="p in allPlayers"
 
 <button
 v-for="p in allPlayers"
+:key="p.nick"
 @click="voteBagre(p.nick)"
+:class="{voted:voted.bagre}"
 >
 {{p.nick}}
 </button>
@@ -192,7 +209,6 @@ getDoc,
 setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 const firebaseConfig={
 apiKey:"AIzaSyCM1zA9NYpxG9WSb8E4k91FNp2DIvqzPEQ",
 authDomain:"login-cmim.firebaseapp.com",
@@ -210,7 +226,7 @@ const tierValues={
 
 function balanceByLane(players){
 
-const lanes=["top","jg","mdi","adc","sup"]
+const lanes=["top","jg","mid","adc","sup"]
 
 let teamA=[]
 let teamB=[]
@@ -218,7 +234,7 @@ let teamB=[]
 lanes.forEach(lane=>{
 
 const lanePlayers=players
-.filter(p=>p.lane===lane)
+.filter(p => (p.lane || "").toLowerCase().includes(lane))
 .sort((a,b)=>tierValues[b.tier]-tierValues[a.tier])
 
 if(lanePlayers[0]) teamA.push(lanePlayers[0])
@@ -244,93 +260,94 @@ data(){
 return{
 draftId,
 teamA:[],
-teamB:[]
+teamB:[],
+voted:{
+result:false,
+score:false,
+mvp:false,
+bagre:false
+}
 }
 },
 
 computed:{
-
 allPlayers(){
 return [...this.teamA,...this.teamB]
 }
-
 },
 
 methods:{
 
+
 async voteResult(team){
+
+if(this.voted.result) return
 
 const ref=doc(db,"votes",draftId)
 
-const snap=await getDoc(ref)
+await setDoc(ref,{
+resultVotes:{
+[lolNick]:team
+}
+},{merge:true})
 
-let data=snap.exists()?snap.data():{}
-
-if(data.resultVotes?.[lolNick]) return
-
-if(!data.resultVotes) data.resultVotes={}
-
-data.resultVotes[lolNick]=team
-
-await setDoc(ref,data,{merge:true})
+this.voted.result=true
 
 },
+
 
 async voteScore(score){
 
+if(this.voted.score) return
+
 const ref=doc(db,"votes",draftId)
 
-const snap=await getDoc(ref)
+await setDoc(ref,{
+scoreVotes:{
+[lolNick]:score
+}
+},{merge:true})
 
-let data=snap.exists()?snap.data():{}
-
-if(data.scoreVotes?.[lolNick]) return
-
-if(!data.scoreVotes) data.scoreVotes={}
-
-data.scoreVotes[lolNick]=score
-
-await setDoc(ref,data,{merge:true})
+this.voted.score=true
 
 },
+
 
 async voteMVP(player){
 
+if(this.voted.mvp) return
+
 const ref=doc(db,"votes",draftId)
 
-const snap=await getDoc(ref)
+await setDoc(ref,{
+mvpVotes:{
+[lolNick]:player
+}
+},{merge:true})
 
-let data=snap.exists()?snap.data():{}
-
-if(data.mvpVotes?.[lolNick]) return
-
-if(!data.mvpVotes) data.mvpVotes={}
-
-data.mvpVotes[lolNick]=player
-
-await setDoc(ref,data,{merge:true})
+this.voted.mvp=true
 
 },
 
+
 async voteBagre(player){
+
+if(this.voted.bagre) return
 
 const ref=doc(db,"votes",draftId)
 
-const snap=await getDoc(ref)
+await setDoc(ref,{
+bagreVotes:{
+[lolNick]:player
+}
+},{merge:true})
 
-let data=snap.exists()?snap.data():{}
-
-if(data.bagreVotes?.[lolNick]) return
-
-if(!data.bagreVotes) data.bagreVotes={}
-
-data.bagreVotes[lolNick]=player
-
-await setDoc(ref,data,{merge:true})
+this.voted.bagre=true
 
 }
 
 },
+
 
 mounted(){
 
@@ -361,4 +378,3 @@ this.teamB=teamB
 
 </body>
 </html>
-
