@@ -132,14 +132,14 @@ CMIM <span>Draft</span>
 
 <button 
 @click="voteResult('A')" 
-:class="{voted:voted.result}"
+:class="{voted:voted.result==='A'}"
 >
 Time A venceu
 </button>
 
 <button 
 @click="voteResult('B')" 
-:class="{voted:voted.result}"
+:class="{voted:voted.result==='B'}"
 >
 Time B venceu
 </button>
@@ -148,14 +148,14 @@ Time B venceu
 
 <button 
 @click="voteScore('2-0')" 
-:class="{voted:voted.score}"
+:class="{voted:voted.score==='2-0'}"
 >
 2-0
 </button>
 
 <button 
 @click="voteScore('2-1')" 
-:class="{voted:voted.score}"
+:class="{voted:voted.score==='2-1'}"
 >
 2-1
 </button>
@@ -170,7 +170,7 @@ Time B venceu
 v-for="p in allPlayers"
 :key="p.nick"
 @click="voteMVP(p.nick)"
-:class="{voted:voted.mvp}"
+:class="{voted:voted.mvp===p.nick}"
 >
 {{p.nick}}
 </button>
@@ -185,7 +185,7 @@ v-for="p in allPlayers"
 v-for="p in allPlayers"
 :key="p.nick"
 @click="voteBagre(p.nick)"
-:class="{voted:voted.bagre}"
+:class="{voted:voted.bagre===p.nick}"
 >
 {{p.nick}}
 </button>
@@ -262,10 +262,10 @@ draftId,
 teamA:[],
 teamB:[],
 voted:{
-result:false,
-score:false,
-mvp:false,
-bagre:false
+result:null,
+score:null,
+mvp:null,
+bagre:null
 }
 }
 },
@@ -291,7 +291,7 @@ resultVotes:{
 }
 },{merge:true})
 
-this.voted.result=true
+this.voted.result=team
 
 },
 
@@ -308,7 +308,7 @@ scoreVotes:{
 }
 },{merge:true})
 
-this.voted.score=true
+this.voted.score=score
 
 },
 
@@ -325,7 +325,7 @@ mvpVotes:{
 }
 },{merge:true})
 
-this.voted.mvp=true
+this.voted.mvp=player
 
 },
 
@@ -342,7 +342,7 @@ bagreVotes:{
 }
 },{merge:true})
 
-this.voted.bagre=true
+this.voted.bagre=player
 
 }
 
@@ -378,3 +378,4 @@ this.teamB=teamB
 
 </body>
 </html>
+
