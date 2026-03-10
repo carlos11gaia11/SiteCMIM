@@ -88,6 +88,12 @@ button.voted{
 background:#27ae60;
 }
 
+.menuBtn{
+background:#FFD000;
+color:black;
+font-weight:800;
+}
+
 </style>
 </head>
 
@@ -126,41 +132,43 @@ CMIM <span>Draft</span>
 
 </div>
 
+
 <div class="voteBox">
 
 <h2>Resultado</h2>
 
-<button 
-@click="voteResult('A')" 
+<button
+@click="voteResult('A')"
 :class="{voted:voted.result==='A'}"
 >
-Time A venceu
+Time A venceu ({{votes.result.A}})
 </button>
 
-<button 
-@click="voteResult('B')" 
+<button
+@click="voteResult('B')"
 :class="{voted:voted.result==='B'}"
 >
-Time B venceu
+Time B venceu ({{votes.result.B}})
 </button>
 
 <br><br>
 
-<button 
-@click="voteScore('2-0')" 
+<button
+@click="voteScore('2-0')"
 :class="{voted:voted.score==='2-0'}"
 >
-2-0
+2-0 ({{votes.score['2-0']}})
 </button>
 
-<button 
-@click="voteScore('2-1')" 
+<button
+@click="voteScore('2-1')"
 :class="{voted:voted.score==='2-1'}"
 >
-2-1
+2-1 ({{votes.score['2-1']}})
 </button>
 
 </div>
+
 
 <div class="voteBox">
 
@@ -172,10 +180,11 @@ v-for="p in allPlayers"
 @click="voteMVP(p.nick)"
 :class="{voted:voted.mvp===p.nick}"
 >
-{{p.nick}}
+{{p.nick}} ({{votes.mvp[p.nick] || 0}})
 </button>
 
 </div>
+
 
 <div class="voteBox">
 
@@ -187,13 +196,48 @@ v-for="p in allPlayers"
 @click="voteBagre(p.nick)"
 :class="{voted:voted.bagre===p.nick}"
 >
-{{p.nick}}
+{{p.nick}} ({{votes.bagre[p.nick] || 0}})
 </button>
 
 </div>
 
+
+<div class="voteBox">
+
+<h2>Resultados da Comunidade</h2>
+
+<p v-if="winner.result">
+Vencedor da série: <b>Time {{winner.result}}</b>
+</p>
+
+<p v-if="winner.score">
+Placar mais votado: <b>{{winner.score}}</b>
+</p>
+
+<p v-if="winner.mvp">
+MVP da série: <b>{{winner.mvp}}</b>
+</p>
+
+<p v-if="winner.bagre">
+Bagre da série: <b>{{winner.bagre}}</b>
+</p>
+
 </div>
 
+
+<div
+v-if="voted.result && voted.score && voted.mvp && voted.bagre"
+class="voteBox"
+>
+
+<button class="menuBtn" @click="goMenu">
+Voltar ao Menu Principal
+</button>
+
+</div>
+
+
+</div>
 </div>
 
 
@@ -205,7 +249,6 @@ import {
 getFirestore,
 doc,
 onSnapshot,
-getDoc,
 setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -247,7 +290,6 @@ return{teamA,teamB}
 }
 
 
-
 const params=new URLSearchParams(window.location.search)
 
 const draftId=params.get("draft")
@@ -258,15 +300,33 @@ Vue.createApp({
 
 data(){
 return{
+
 draftId,
+
 teamA:[],
 teamB:[],
+
 voted:{
 result:null,
 score:null,
 mvp:null,
 bagre:null
+},
+
+votes:{
+result:{A:0,B:0},
+score:{"2-0":0,"2-1":0},
+mvp:{},
+bagre:{}
+},
+
+winner:{
+result:null,
+score:null,
+mvp:null,
+bagre:null
 }
+
 }
 },
 
@@ -283,67 +343,52 @@ async voteResult(team){
 
 if(this.voted.result) return
 
-const ref=doc(db,"votes",draftId)
-
-await setDoc(ref,{
-resultVotes:{
-[lolNick]:team
-}
+await setDoc(doc(db,"votes",draftId),{
+resultVotes:{[lolNick]:team}
 },{merge:true})
 
 this.voted.result=team
 
 },
 
-
 async voteScore(score){
 
 if(this.voted.score) return
 
-const ref=doc(db,"votes",draftId)
-
-await setDoc(ref,{
-scoreVotes:{
-[lolNick]:score
-}
+await setDoc(doc(db,"votes",draftId),{
+scoreVotes:{[lolNick]:score}
 },{merge:true})
 
 this.voted.score=score
 
 },
 
-
 async voteMVP(player){
 
 if(this.voted.mvp) return
 
-const ref=doc(db,"votes",draftId)
-
-await setDoc(ref,{
-mvpVotes:{
-[lolNick]:player
-}
+await setDoc(doc(db,"votes",draftId),{
+mvpVotes:{[lolNick]:player}
 },{merge:true})
 
 this.voted.mvp=player
 
 },
 
-
 async voteBagre(player){
 
 if(this.voted.bagre) return
 
-const ref=doc(db,"votes",draftId)
-
-await setDoc(ref,{
-bagreVotes:{
-[lolNick]:player
-}
+await setDoc(doc(db,"votes",draftId),{
+bagreVotes:{[lolNick]:player}
 },{merge:true})
 
 this.voted.bagre=player
 
+},
+
+goMenu(){
+window.location.href="menu.html"
 }
 
 },
@@ -370,6 +415,68 @@ this.teamB=teamB
 
 })
 
+
+const votesRef=doc(db,"votes",draftId)
+
+onSnapshot(votesRef,(snap)=>{
+
+if(!snap.exists()) return
+
+const data=snap.data()
+
+this.votes.result={A:0,B:0}
+this.votes.score={"2-0":0,"2-1":0}
+this.votes.mvp={}
+this.votes.bagre={}
+
+if(data.resultVotes){
+
+Object.values(data.resultVotes).forEach(v=>{
+this.votes.result[v]++
+})
+
+}
+
+if(data.scoreVotes){
+
+Object.values(data.scoreVotes).forEach(v=>{
+this.votes.score[v]++
+})
+
+}
+
+if(data.mvpVotes){
+
+Object.values(data.mvpVotes).forEach(p=>{
+if(!this.votes.mvp[p]) this.votes.mvp[p]=0
+this.votes.mvp[p]++
+})
+
+}
+
+if(data.bagreVotes){
+
+Object.values(data.bagreVotes).forEach(p=>{
+if(!this.votes.bagre[p]) this.votes.bagre[p]=0
+this.votes.bagre[p]++
+})
+
+}
+
+this.winner.result =
+this.votes.result.A > this.votes.result.B ? "A" : "B"
+
+this.winner.score =
+this.votes.score["2-0"] > this.votes.score["2-1"] ? "2-0" : "2-1"
+
+this.winner.mvp = Object.keys(this.votes.mvp)
+.sort((a,b)=>this.votes.mvp[b]-this.votes.mvp[a])[0]
+
+this.winner.bagre = Object.keys(this.votes.bagre)
+.sort((a,b)=>this.votes.bagre[b]-this.votes.bagre[a])[0]
+
+})
+
 }
 
 }).mount("#app")
@@ -378,4 +485,3 @@ this.teamB=teamB
 
 </body>
 </html>
-
