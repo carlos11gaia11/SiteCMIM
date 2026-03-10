@@ -262,7 +262,10 @@ if(p){
 return `
 <div class="slot">
 ${p.nick} <b>[${p.tier}]</b>
-<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
+${p.uid===currentUser.uid || isAdmin
+? `<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>`
+: ""
+}
 </div>
 `;
 }
@@ -284,7 +287,10 @@ return `<div class="slot">Vaga</div>`;
 ${(data.overflow||[]).map(p=>`
 ${p.nick} <b>[${p.tier}]</b>
 ${p.nick} <b>[${p.tier}]</b> (${p.lane.toUpperCase()})
-<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>
+${p.uid===currentUser.uid || isAdmin
+? `<button class="removeBtn" onclick="remover('${id}','${p.uid}')">❌</button>`
+: ""
+}
 `).join("<br>") || "Nenhum"}
 
 </div>
@@ -421,6 +427,13 @@ alert("Partida criada!");
 
 window.remover=async(id,uid)=>{
 
+/* bloqueia remover outro player */
+
+if(uid !== currentUser.uid && !isAdmin){
+alert("Você só pode sair da fila por conta própria.");
+return;
+}
+
 const ref=doc(db,"queues",id);
 const snap=await getDoc(ref);
 const d=snap.data();
@@ -474,3 +487,4 @@ ready:{}
 
 </body>
 </html>
+
