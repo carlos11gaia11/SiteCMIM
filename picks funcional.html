@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Inhouse Draft System - Snake Corrigido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .timer-low { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .selected-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); border-color: #3b82f6 !important; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4 font-sans">
+
+    <div id="setup-screen" class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-xl shadow-2xl mt-10">
+        <h1 class="text-3xl font-bold mb-2 text-blue-400">Configurar Draft</h1>
+        <p class="mb-6 text-slate-400 text-sm">Cole a lista de jogadores (Ex: TOP - Nome A+)</p>
+        <textarea id="player-list" class="w-full h-80 p-4 bg-slate-900 border border-slate-700 rounded-lg mb-6 font-mono text-sm focus:border-blue-500 outline-none transition" placeholder="TOP - Eros A+
+JG - Froxy B#
+MID - Player S
+ADC - Atirador A
+SUP - Suporte B
+TOP - OutroTop A-
+JG - OutroJG S"></textarea>
+        <button onclick="analyzeList()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-lg font-bold text-lg transition shadow-lg">Analisar e Sortear Ordem</button>
+    </div>
+
+    <div id="confirm-screen" class="hidden max-w-2xl mx-auto bg-slate-800 p-8 rounded-xl shadow-2xl mt-10 text-center border border-slate-700">
+        <h2 class="text-2xl font-bold mb-2">Ordem de Escolha Definida</h2>
+        <p class="text-slate-400 mb-6 italic">Lane dos Capitães: <span id="detected-lane" class="text-blue-400 font-bold underline"></span></p>
+        <div id="captain-preview" class="grid grid-cols-2 gap-4 mb-8"></div>
+        <div class="flex gap-4">
+            <button onclick="backToSetup()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold">Corrigir Lista</button>
+            <button onclick="startDraft()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold shadow-lg">Iniciar Draft</button>
+        </div>
+    </div>
+
+    <div id="draft-screen" class="hidden max-w-6xl mx-auto py-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                    Draft Ao Vivo
+                </h2>
+                <p id="remaining-count" class="text-slate-400 text-sm italic"></p>
+            </div>
+            <div id="timer-display" class="text-5xl font-mono font-bold bg-slate-900 px-8 py-3 rounded-xl border-2 border-blue-600 shadow-inner">30s</div>
+        </div>
+
+        <div id="turn-indicator" class="text-center mb-8 p-6 bg-blue-900/20 border border-blue-500/50 rounded-2xl">
+            <p class="text-blue-300 uppercase tracking-widest text-xs font-bold mb-1">Agora é a vez de:</p>
+            <span class="text-3xl font-black text-white" id="current-captain-name">---</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10" id="teams-container"></div>
+
+        <div class="border-t border-slate-700 pt-6">
+            <h3 class="text-xl font-bold mb-6 text-slate-400 flex items-center gap-2 underline decoration-blue-500 underline-offset-8">
+                Jogadores Disponíveis
+            </h3>
+            <div id="available-players" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"></div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="hidden max-w-6xl mx-auto text-center py-10">
+        <h1 class="text-5xl font-black mb-4 text-white tracking-tighter italic">DRAFT <span class="text-blue-500">CONCLUÍDO</span></h1>
+        <div id="final-teams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left"></div>
+        <button onclick="location.reload()" class="mt-16 bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-xl">Novo Draft / Resetar</button>
+    </div>
+
+    <script>
+    let allPlayers = [];
+    let playersPool = [];
+    let captains = [];
+    let teams = [[], [], [], []];
+    let turnIndex = 0;
+    let timer;
+    let timeLeft = 30;
+
+    const tierWeights = { 'S': 10, 'A+': 9, 'A': 8, 'A-': 7, 'B#': 6, 'B': 5, 'D': 1 };
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function analyzeList() {
+        const text = document.getElementById('player-list').value;
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        const laneGroups = { TOP: [], JG: [], MID: [], ADC: [], SUP: [] };
+        allPlayers = [];
+
+        lines.forEach((line, index) => {
+            const regex = /^(TOP|JG|MID|ADC|SUP)\s*[-–—]\s*(.+?)\s+([SABCD][\+\-\#\*]*)$/i;
+            const match = line.trim().match(regex);
+            if (match) {
+                const lane = match[1].toUpperCase();
+                const p = { 
+                    id: index, 
+                    name: match[2].trim(), 
+                    tier: match[3].toUpperCase(), 
+                    lane: lane, 
+                    weight: tierWeights[match[3].toUpperCase()] || 5 
+                };
+                laneGroups[lane].push(p);
+                allPlayers.push(p);
+            }
+        });
+
+        let bestLane = null;
+        let minDiff = Infinity;
+        Object.keys(laneGroups).forEach(lane => {
+            if(laneGroups[lane].length >= 4) {
+                const weights = laneGroups[lane].map(p => p.weight);
+                const diff = Math.max(...weights) - Math.min(...weights);
+                if (diff < minDiff) { minDiff = diff; bestLane = lane; }
+            }
+        });
+
+        if (!bestLane) { alert("Necessário 4 jogadores em uma mesma lane para serem capitães."); return; }
+
+        captains = shuffle(laneGroups[bestLane].slice(0, 4));
+        document.getElementById('detected-lane').innerText = bestLane;
+        document.getElementById('captain-preview').innerHTML = captains.map((c, idx) => `
+            <div class="bg-slate-900 p-4 rounded-lg border border-blue-500/40 text-left">
+                <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${idx + 1}º Escolha</div>
+                <div class="font-bold text-lg">${c.name}</div>
+                <div class="text-xs text-slate-500 italic">Tier: ${c.tier}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('confirm-screen').classList.remove('hidden');
+    }
+
+    function backToSetup() {
+        document.getElementById('confirm-screen').classList.add('hidden');
+        document.getElementById('setup-screen').classList.remove('hidden');
+    }
+
+    function startDraft() {
+        teams = [[], [], [], []];
+        turnIndex = 0;
+        const capIds = captains.map(c => c.id);
+        playersPool = allPlayers.filter(p => !capIds.includes(p.id));
+        captains.forEach((cap, i) => teams[i] = [cap]);
+        document.getElementById('confirm-screen').classList.add('hidden');
+        document.getElementById('draft-screen').classList.remove('hidden');
+        nextTurnLogic(); 
+    }
+
+    function getSnakeTurn() {
+        const cycle = [0, 1, 2, 3, 3, 2, 1, 0];
+        return cycle[turnIndex % 8];
+    }
+
+    // Gerencia a lógica de pular capitães que já completaram o time
+    function nextTurnLogic() {
+        if (playersPool.length === 0 || teams.every(t => t.length >= 5)) {
+            showResults();
+            return;
+        }
+
+        const currentCapIdx = getSnakeTurn();
+        // Se o time já tem 5 jogadores, pula para o próximo turno do Snake
+        if (teams[currentCapIdx].length >= 5) {
+            turnIndex++;
+            nextTurnLogic();
+            return;
+        }
+
+        renderDraft();
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        timeLeft = 30;
+        const display = document.getElementById('timer-display');
+        display.innerText = "30s";
+        timer = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft + 's';
+            if (timeLeft <= 10) display.classList.add('timer-low');
+            else display.classList.remove('timer-low');
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                autoPick();
+            }
+        }, 1000);
+    }
+
+    function autoPick() {
+        const currentCapIdx = getSnakeTurn();
+        // Tenta achar um jogador de uma lane que o capitão não tenha
+        const validPlayer = playersPool.find(p => !teams[currentCapIdx].some(tp => tp.lane === p.lane));
+        
+        if (validPlayer) {
+            pickPlayer(validPlayer.id);
+        } else if (playersPool.length > 0) {
+            // Se não houver lane compatível, pega qualquer um disponível
+            pickPlayer(playersPool[0].id);
+        } else {
+            // Se não houver jogadores, finaliza
+            showResults();
+        }
+    }
+
+    function pickPlayer(playerId) {
+        const pIdx = playersPool.findIndex(p => p.id === playerId);
+        if (pIdx === -1) return;
+
+        const currentCapIdx = getSnakeTurn();
+        const player = playersPool[pIdx];
+
+        // Bloqueio manual de lane repetida
+        if (teams[currentCapIdx].some(p => p.lane === player.lane)) {
+            alert("Você já possui um jogador para a lane " + player.lane);
+            return;
+        }
+
+        teams[currentCapIdx].push(playersPool.splice(pIdx, 1)[0]);
+        
+        checkAutoPicks();
+        turnIndex++;
+        nextTurnLogic();
+    }
+
+    function checkAutoPicks() {
+        const lanes = ['TOP', 'JG', 'MID', 'ADC', 'SUP'];
+        let changed;
+        do {
+            changed = false;
+            lanes.forEach(lane => {
+                const remainingInLane = playersPool.filter(p => p.lane === lane);
+                if (remainingInLane.length === 1) {
+                    const targetTeamIdx = teams.findIndex(t => t.length < 5 && !t.some(p => p.lane === lane));
+                    if (targetTeamIdx !== -1) {
+                        const p = remainingInLane[0];
+                        teams[targetTeamIdx].push(p);
+                        playersPool = playersPool.filter(pl => pl.id !== p.id);
+                        changed = true;
+                    }
+                }
+            });
+        } while (changed);
+    }
+
+    function renderDraft() {
+        const capIdx = getSnakeTurn();
+        const curCap = captains[capIdx];
+        const curTeam = teams[capIdx];
+
+        document.getElementById('current-captain-name').innerHTML = `${curCap.name} <span class="text-blue-400 text-lg">(${curCap.tier})</span>`;
+        document.getElementById('remaining-count').innerHTML = `<span class="font-bold text-blue-400">${playersPool.length}</span> jogadores restantes`;
+
+        const container = document.getElementById('teams-container');
+        container.innerHTML = teams.map((team, i) => {
+            const isCurrent = (i === capIdx);
+            return `
+                <div class="bg-slate-800 p-5 rounded-xl border-2 ${isCurrent ? 'selected-glow border-blue-500 scale-105' : 'border-slate-700 opacity-60'} transition-all">
+                    <h4 class="font-black text-blue-400 mb-4 truncate text-sm">Cap. ${captains[i].name}</h4>
+                    <div class="space-y-2">
+                        ${['TOP', 'JG', 'MID', 'ADC', 'SUP'].map(l => {
+                            const p = team.find(player => player.lane === l);
+                            return `<div class="flex justify-between text-[11px] border-b border-slate-700/50 pb-1">
+                                <span class="font-bold text-slate-500">${l}</span>
+                                <span class="truncate font-medium ${p ? 'text-white' : 'text-slate-600 italic'}">${p ? p.name : 'Vago'}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }).join('');
+
+        const poolContainer = document.getElementById('available-players');
+        poolContainer.innerHTML = playersPool.map(p => {
+            const laneOcupada = curTeam.some(tp => tp.lane === p.lane);
+            return `
+                <button 
+                    onclick="${laneOcupada ? '' : `pickPlayer(${p.id})`}" 
+                    class="p-3 rounded-lg text-left transition relative border ${laneOcupada 
+                        ? 'bg-slate-900/50 border-red-900/50 opacity-40 cursor-not-allowed' 
+                        : 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-700 group'}"
+                >
+                    <span class="block text-[10px] font-bold ${laneOcupada ? 'text-red-500' : 'text-blue-500'} uppercase">${p.lane}</span>
+                    <div class="text-sm font-bold truncate ${laneOcupada ? 'text-slate-500' : 'text-white'}">${p.name}</div>
+                    <div class="text-[10px] opacity-40 italic">Tier: ${p.tier}</div>
+                </button>
+            `;
+        }).join('');
+    }
+
+    function showResults() {
+        clearInterval(timer);
+        document.getElementById('draft-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        const resContainer = document.getElementById('final-teams');
+        resContainer.innerHTML = teams.map((team, i) => {
+            const order = ['TOP', 'JG', 'MID', 'ADC', 'SUP'];
+            return `
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl">
+                    <div class="text-center mb-6">
+                        <div class="text-[10px] font-bold text-blue-500 uppercase tracking-widest italic">Time Capitão</div>
+                        <h3 class="text-2xl font-black text-white truncate">${captains[i].name}</h3>
+                    </div>
+                    <div class="space-y-4">
+                        ${order.map(l => {
+                            const p = team.find(pl => pl.lane === l);
+                            return `
+                                <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                    <span class="font-bold text-slate-500 text-xs">${l}</span>
+                                    <div class="text-right">
+                                        <div class="text-sm font-bold ${!p ? 'text-red-500' : 'text-white'}">${p ? p.name : 'Vago'}</div>
+                                    </div>
+                                </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }).join('');
+    }
+    </script>
+</body>
+</html>
