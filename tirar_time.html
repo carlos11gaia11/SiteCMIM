@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Inhouse Draft - Alternado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .timer-low { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .selected-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); border-color: #3b82f6 !important; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4 font-sans">
+
+    <div id="setup-screen" class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-xl shadow-2xl mt-10">
+        <h1 class="text-3xl font-bold mb-2 text-blue-400">Configurar Draft (Alternado)</h1>
+        <p class="mb-6 text-slate-400 text-sm">Cole a lista. Quando um for escolhido, o par da lane vai para o outro time.</p>
+        <textarea id="player-list" class="w-full h-80 p-4 bg-slate-900 border border-slate-700 rounded-lg mb-6 font-mono text-sm focus:border-blue-500 outline-none transition" placeholder="TOP - Jogador 1 A
+TOP - Jogador 2 B
+..."></textarea>
+        <button onclick="analyzeList()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-lg font-bold text-lg transition shadow-lg">Analisar e Sortear Capitães</button>
+    </div>
+
+    <div id="confirm-screen" class="hidden max-w-2xl mx-auto bg-slate-800 p-8 rounded-xl shadow-2xl mt-10 text-center border border-slate-700">
+        <h2 class="text-2xl font-bold mb-2">Capitães Definidos</h2>
+        <p class="text-slate-400 mb-6 italic">Lane dos Capitães: <span id="detected-lane" class="text-blue-400 font-bold underline"></span></p>
+        <div id="captain-preview" class="grid grid-cols-2 gap-4 mb-8"></div>
+        <div class="flex gap-4">
+            <button onclick="backToSetup()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold">Corrigir Lista</button>
+            <button onclick="startDraft()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold shadow-lg">Iniciar Draft</button>
+        </div>
+    </div>
+
+    <div id="draft-screen" class="hidden max-w-5xl mx-auto py-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h2 class="text-2xl font-bold flex items-center gap-2">Draft Ativo</h2>
+                <p id="remaining-count" class="text-slate-400 text-sm italic"></p>
+            </div>
+            <div id="timer-display" class="text-5xl font-mono font-bold bg-slate-900 px-8 py-3 rounded-xl border-2 border-blue-600">30s</div>
+        </div>
+
+        <div id="turn-indicator" class="text-center mb-8 p-6 bg-blue-900/20 border border-blue-500/50 rounded-2xl">
+            <p class="text-blue-300 uppercase tracking-widest text-xs font-bold mb-1">Turno de Seleção:</p>
+            <span class="text-3xl font-black text-white" id="current-captain-name">---</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10" id="teams-container"></div>
+
+        <div class="border-t border-slate-700 pt-6">
+            <h3 class="text-xl font-bold mb-6 text-slate-400">Jogadores Disponíveis</h3>
+            <div id="available-players" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"></div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="hidden max-w-4xl mx-auto text-center py-10">
+        <h1 class="text-5xl font-black mb-4 text-white italic">DRAFT <span class="text-blue-500">CONCLUÍDO</span></h1>
+        <div id="final-teams" class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left"></div>
+        <button onclick="location.reload()" class="mt-16 bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-full font-bold shadow-xl">Resetar</button>
+    </div>
+
+    <script>
+    let allPlayers = [];
+    let playersPool = [];
+    let captains = [];
+    let teams = [[], []];
+    let turnIndex = 0;
+    let timer;
+    let timeLeft = 30;
+
+    const tierWeights = { 'S': 10, 'A+': 9, 'A': 8, 'A-': 7, 'B#': 6, 'B': 5, 'D': 1 };
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function analyzeList() {
+        const text = document.getElementById('player-list').value;
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        const laneGroups = { TOP: [], JG: [], MID: [], ADC: [], SUP: [] };
+        allPlayers = [];
+
+        lines.forEach((line, index) => {
+            const regex = /^(TOP|JG|MID|ADC|SUP)\s*[-–—\s]\s*(.+?)\s+([SABCD][\+\-\#\*]*)$/i;
+            const match = line.trim().match(regex);
+            if (match) {
+                const lane = match[1].toUpperCase();
+                const p = { id: index, name: match[2].trim(), tier: match[3].toUpperCase(), lane: lane };
+                laneGroups[lane].push(p);
+                allPlayers.push(p);
+            }
+        });
+
+        let bestLane = null;
+        Object.keys(laneGroups).forEach(lane => {
+            if(laneGroups[lane].length >= 2 && !bestLane) { bestLane = lane; }
+        });
+
+        if (!bestLane) { alert("Necessário 2 jogadores em uma lane para capitães."); return; }
+
+        captains = shuffle([...laneGroups[bestLane]]).slice(0, 2);
+        document.getElementById('detected-lane').innerText = bestLane;
+        document.getElementById('captain-preview').innerHTML = captains.map((c, idx) => `
+            <div class="bg-slate-900 p-4 rounded-lg border border-blue-500/40 text-left">
+                <div class="text-[10px] text-blue-400 font-bold uppercase">Capitão ${idx + 1}</div>
+                <div class="font-bold text-lg">${c.name}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('confirm-screen').classList.remove('hidden');
+    }
+
+    function startDraft() {
+        teams = [[captains[0]], [captains[1]]];
+        turnIndex = 0;
+        const capIds = captains.map(c => c.id);
+        playersPool = allPlayers.filter(p => !capIds.includes(p.id));
+        
+        document.getElementById('confirm-screen').classList.add('hidden');
+        document.getElementById('draft-screen').classList.remove('hidden');
+        nextTurnLogic(); 
+    }
+
+    // Lógica Alternada: 0, 1, 0, 1...
+    function getCurrentTurn() {
+        return turnIndex % 2;
+    }
+
+    function nextTurnLogic() {
+        if (playersPool.length === 0 || (teams[0].length >= 5 && teams[1].length >= 5)) {
+            showResults();
+            return;
+        }
+        renderDraft();
+        startTimer();
+    }
+
+    function pickPlayer(playerId) {
+        const pIdx = playersPool.findIndex(p => p.id === playerId);
+        if (pIdx === -1) return;
+
+        const currentCapIdx = getCurrentTurn();
+        const otherCapIdx = currentCapIdx === 0 ? 1 : 0;
+        const selectedPlayer = playersPool[pIdx];
+
+        // 1. Adiciona o escolhido ao time atual
+        teams[currentCapIdx].push(playersPool.splice(pIdx, 1)[0]);
+
+        // 2. LOGICA PEDIDA: Busca o "par" da mesma lane para o outro time
+        const pairIdx = playersPool.findIndex(p => p.lane === selectedPlayer.lane);
+        if (pairIdx !== -1) {
+            teams[otherCapIdx].push(playersPool.splice(pairIdx, 1)[0]);
+        }
+
+        clearInterval(timer);
+        turnIndex++; // Sempre alterna
+        nextTurnLogic();
+    }
+
+    function autoPick() {
+        if (playersPool.length > 0) pickPlayer(playersPool[0].id);
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        timeLeft = 30;
+        document.getElementById('timer-display').innerText = "30s";
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = timeLeft + 's';
+            if (timeLeft <= 0) { clearInterval(timer); autoPick(); }
+        }, 1000);
+    }
+
+    function renderDraft() {
+        const capIdx = getCurrentTurn();
+        document.getElementById('current-captain-name').innerText = captains[capIdx].name;
+        document.getElementById('remaining-count').innerText = `${playersPool.length} jogadores no banco`;
+
+        const container = document.getElementById('teams-container');
+        container.innerHTML = teams.map((team, i) => `
+            <div class="bg-slate-800 p-6 rounded-xl border-2 ${i === capIdx ? 'border-blue-500 selected-glow' : 'border-slate-700 opacity-80'}">
+                <h4 class="font-bold text-blue-400 mb-4 text-lg">Time ${captains[i].name}</h4>
+                <div class="space-y-2">
+                    ${['TOP', 'JG', 'MID', 'ADC', 'SUP'].map(l => {
+                        const p = team.find(player => player.lane === l);
+                        return `<div class="flex justify-between text-sm border-b border-slate-700/50 pb-1">
+                            <span class="text-slate-500 font-bold">${l}</span>
+                            <span class="${p ? 'text-white' : 'text-slate-600'}">${p ? p.name : 'Aguardando...'}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        const poolContainer = document.getElementById('available-players');
+        // Só mostra jogadores de lanes que o capitão atual ainda não tem
+        const myLanes = teams[capIdx].map(p => p.lane);
+        poolContainer.innerHTML = playersPool.map(p => {
+            const laneOcupada = myLanes.includes(p.lane);
+            return `
+                <button onclick="${laneOcupada ? '' : `pickPlayer(${p.id})`}" 
+                    class="p-3 rounded border ${laneOcupada ? 'bg-slate-900 opacity-20 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:border-blue-500'} text-left">
+                    <span class="block text-[10px] text-blue-400">${p.lane}</span>
+                    <div class="font-bold truncate">${p.name}</div>
+                </button>`;
+        }).join('');
+    }
+
+    function showResults() {
+        clearInterval(timer);
+        document.getElementById('draft-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-teams').innerHTML = teams.map((team, i) => `
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-2xl font-bold mb-4 text-center text-blue-400">${captains[i].name}</h3>
+                ${['TOP', 'JG', 'MID', 'ADC', 'SUP'].map(l => {
+                    const p = team.find(pl => pl.lane === l);
+                    return `<div class="flex justify-between py-2 border-b border-slate-700">
+                        <span class="text-slate-400">${l}</span>
+                        <span class="font-bold">${p ? p.name : '-'}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        `).join('');
+    }
+
+    function backToSetup() {
+        document.getElementById('confirm-screen').classList.add('hidden');
+        document.getElementById('setup-screen').classList.remove('hidden');
+    }
+    </script>
+</body>
+</html>
