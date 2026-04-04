@@ -143,7 +143,7 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
 <th>Torneio 2º</th>
 <th>Torneio 1º</th>
 <th>Winrate%</th>
-<th>MVP</th><th>Bagre</th><th>Penalidades</th>
+<th>MVP</th><th>ACE</th><th>Penalidades</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -200,8 +200,8 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
   <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
     <label style="width:60px">MVP</label>
     <input id="mvpInput" placeholder="Nome do MVP">
-    <label style="width:60px">Bagre</label>
-    <input id="bagreInput" placeholder="Nome do Bagre">
+    <label style="width:60px">ACE</label>
+    <input id="bagreInput" placeholder="Nome do ACE">
   </div>
 
   <div style="display:flex;gap:8px;margin-top:12px">
@@ -233,7 +233,7 @@ tbody tr:hover{background:rgba(124,92,255,0.03)}
 
 <footer style="margin-top:18px;color:var(--muted);font-size:13px;text-align:center">
 Como são contados os pontos?<br>
-Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Torneio 4º -5 • Torneio 3º +5 • Torneio 2º +10 • Torneio 1º +15 • MVP +2 • Bagre -3
+Cada jogo +0.5 • Vitória +2 • Derrota -2.5 • MD3 Win +1.5 • Torneio 4º -5 • Torneio 3º +5 • Torneio 2º +10 • Torneio 1º +15 • MVP +2 • ACE 1
 </footer>
 </div>
 
@@ -253,7 +253,7 @@ const RULES = {
   torneio1:15,
 
   mvp:2,
-  bagrePenalty:2
+  bagrePenalty:1
 };
 
 // 🔵 Inicializar Firebase
